@@ -55,7 +55,7 @@
 <body>
   <div class="container">
     <div class="topbar">
-      <h1>Lootborn Build Tracker v1.3</h1>
+      <h1>Lootborn Build Tracker v1.7</h1>
       <div class="small">Saves in your browser (no login). Inventory is separated by slot.</div>
     </div>
 
@@ -88,7 +88,7 @@
 
   <script>
   // Version marker: bump this each revision so you can confirm the live site updated.
-  const VERSION = "1.3";
+  const VERSION = "1.7";
 
   window.addEventListener("DOMContentLoaded", () => {
     const slots = [
@@ -219,6 +219,248 @@
           gauntlet: ["Firm Grip"],
           amulet: ["Threshold Mark"]
         }
+      }
+    ,
+      {
+        class: "Arcanist",
+        coreSkill: "Fireball",
+        build: "Jolt",
+        variant: "PvE Ancient God",
+        gear: {
+          weapon: "Ancient God Call",
+          helmet: "Dragon Claw Visage",
+          cuirass: "Dragon Bone Armor",
+          belt: "Dragon Soul Smile",
+          greaves: "Dragon Spine Leggings",
+          pauldron: "Dragon Scale Pauldrons",
+          bracers: "Enigmatic Imprint",
+          gauntlet: "Void Arm",
+          boots: "Dragon Hyun Walker",
+          necklace: "Temporal Pendant",
+          amulet: "End's Return",
+          ring: "Swift Shadow Finger"
+        },
+        alternatives: {
+          amulet: ["Holy Shelter"],
+          boots: ["Void Shin"]
+        }
+      },
+      {
+        class: "Arcanist",
+        coreSkill: "Lightning Punch",
+        build: "Ice Sword",
+        variant: "PvE",
+        gear: {
+          weapon: "Fate Intertwined",
+          helmet: "Evil Spirit Skull",
+          cuirass: "Fate Weaver's Protection",
+          belt: "Viper Bond",
+          greaves: "Fate Weaver's Desire",
+          pauldron: "Fairy Whisper",
+          bracers: "Stellar Spindle",
+          gauntlet: "Void Arm",
+          boots: "Void Shin",
+          necklace: "Balance Chain",
+          amulet: "End's Return",
+          ring: "Swift Shadow Finger"
+        },
+        alternatives: {
+          pauldron: ["Elemental Disruption", "Void Scapula"],
+          weapon: ["Sage's Tear"]
+        }
+      },
+      {
+        class: "Arcanist",
+        coreSkill: "Lightning Punch",
+        build: "Ice Sword",
+        variant: "PvP",
+        gear: {
+          weapon: "Prism",
+          helmet: "Fate Weaver's Kindness",
+          cuirass: "Fate Weaver's Protection",
+          belt: "Viper Bond",
+          greaves: "Pact Binding",
+          pauldron: "Elemental Disruption",
+          bracers: "Stellar Spindle",
+          gauntlet: "Void Arm",
+          boots: "Planar Shortcut",
+          necklace: "Balance Chain",
+          amulet: "End's Return",
+          ring: "Swift Shadow Finger"
+        },
+        alternatives: {
+          boots: ["Scholar's Journey"],
+          bracers: ["Enigmatic Imprint"],
+          weapon: ["Fate Intertwined"],
+          belt: ["Void Abdomen"]
+        }
+      },
+      {
+        class: "Arcanist",
+        coreSkill: "Lightning Punch",
+        build: "Flame Bow",
+        variant: "PvE",
+        gear: {
+          weapon: "Fate Intertwined",
+          helmet: "Evil Spirit Skull",
+          cuirass: "Void Cavity",
+          belt: "Resurrection",
+          greaves: "Fate Weaver's Desire",
+          pauldron: "Fate Weaver's Mercy",
+          bracers: "Stellar Spindle",
+          gauntlet: "Void Arm",
+          boots: "Void Shin",
+          necklace: "Balance Chain",
+          amulet: "End's Return",
+          ring: "Lucky Echo"
+        },
+        alternatives: {
+          boots: ["Planar Shortcut"],
+          ring: ["Swift Shadow Finger"]
+        }
+      },
+      {
+        class: "Arcanist",
+        coreSkill: "Lightning Punch",
+        build: "Thunder Punch",
+        variant: "PvE",
+        gear: {
+          weapon: "Fate Intertwined",
+          helmet: "Fate Weaver's Kindness",
+          cuirass: "Fel Heritage Robe",
+          belt: "Viper Bond",
+          greaves: "Fate Weaver's Desire",
+          pauldron: "Elemental Disruption",
+          bracers: "Stellar Spindle",
+          gauntlet: "Void Arm",
+          boots: "Void Shin",
+          necklace: "Balance Chain",
+          amulet: "End's Return",
+          ring: "Swift Shadow Finger"
+        },
+        alternatives: {
+          boots: ["Planar Shortcut"],
+          amulet: ["Threshold Mark"]
+        }
+      },
+      {
+        class: "Arcanist",
+        coreSkill: "Lightning Punch",
+        build: "Thunder Punch",
+        variant: "PvP",
+        gear: {
+          weapon: "Fate Intertwined",
+          helmet: "Fate Weaver's Kindness",
+          cuirass: "Fate Weaver's Protection",
+          belt: "Fate Weaver's Taking",
+          greaves: "Fate Weaver's Desire",
+          pauldron: "Fate Weaver's Mercy",
+          bracers: "Stellar Spindle",
+          gauntlet: "Void Arm",
+          boots: "Fate Weaver's Benevolence",
+          necklace: "Balance Chain",
+          amulet: "Threshold Mark",
+          ring: "Swift Shadow Finger"
+        },
+        alternatives: {
+          necklace: ["Swoosh"],
+          amulet: ["Splash"],
+          ring: ["Hiss"],
+          cuirass: ["Fel Heritage Robe"]
+        }
+      }
+      ,
+      {
+        class: "Arcanist",
+        coreSkill: "Ice Ray",
+        build: "Rimebite",
+        variant: "PvE",
+        gear: {
+          weapon: "Lich Remains",
+          helmet: "Evil Spirit Skull",
+          cuirass: "Cryo Mark Robe",
+          belt: "Viper Bond",
+          greaves: "Cryo Mark Trousers",
+          pauldron: "Void Scapula",
+          bracers: "Sorrow Bracers",
+          gauntlet: "Cryo Mark Gloves",
+          boots: "Cryo Mark Boots",
+          necklace: "Temporal Pendant",
+          amulet: "Holy Shelter",
+          ring: "Winter Guard"
+        },
+        alternatives: {
+          necklace: ["Balance Chain"],
+          pauldron: ["Fairy Whisper"],
+          ring: ["Swift Shadow Finger"]
+        }
+      },
+      {
+        class: "Arcanist",
+        coreSkill: "Ice Ray",
+        build: "Rimebite",
+        variant: "PvP",
+        gear: {
+          weapon: "Fate Intertwined",
+          helmet: "Cryo Mark Crown",
+          cuirass: "Cryo Mark Robe",
+          belt: "Cryo Mark Waistband",
+          greaves: "Cryo Mark Trousers",
+          pauldron: "Fairy Whisper",
+          bracers: "Sorrow Bracers",
+          gauntlet: "Deathspeaker",
+          boots: "Planar Shortcut",
+          necklace: "Swoosh",
+          amulet: "Splash",
+          ring: "Hiss"
+        },
+        alternatives: {}
+      },
+      {
+        class: "Arcanist",
+        coreSkill: "Ice Ray",
+        build: "Pyresight",
+        variant: "PvE",
+        gear: {
+          weapon: "Lich Remains",
+          helmet: "Cryo Mark Crown",
+          cuirass: "Void Cavity",
+          belt: "Resurrection",
+          greaves: "Cryo Mark Trousers",
+          pauldron: "Cryo Mark Pauldrons",
+          bracers: "Sorrow Bracers",
+          gauntlet: "Void Arm",
+          boots: "Cryo Mark Boots",
+          necklace: "Temporal Pendant",
+          amulet: "Threshold Mark",
+          ring: "Swift Shadow Finger"
+        },
+        alternatives: {
+          weapon: ["Fate Intertwined"],
+          necklace: ["Balance Chain"],
+          ring: ["Winter Guard"]
+        }
+      },
+      {
+        class: "Arcanist",
+        coreSkill: "Ice Ray",
+        build: "Ionization",
+        variant: "PvE",
+        gear: {
+          weapon: "Lich Remains",
+          helmet: "Cryo Mark Crown",
+          cuirass: "Fel Heritage Robe",
+          belt: "Cryo Mark Waistband",
+          greaves: "Cryo Mark Trousers",
+          pauldron: "Cryo Mark Pauldrons",
+          bracers: "Sorrow Bracers",
+          gauntlet: "Void Arm",
+          boots: "Void Shin",
+          necklace: "Balance Chain",
+          amulet: "Threshold Mark",
+          ring: "Swift Shadow Finger"
+        },
+        alternatives: {}
       }
     ];
 
