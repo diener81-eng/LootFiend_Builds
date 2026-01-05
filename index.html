@@ -5,178 +5,81 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Lootborn Build Tracker</title>
   <style>
-    :root {
-      --bg: #0f1115;
-      --panel: #1a1d24;
-      --text: #e6e6e6;
-      --muted: #b5b5b5;
-      --border: #333;
-      --ok: #7CFC98;
-      --bad: #ff7a7a;
-      --warn: #ffd27a;
+    :root{
+      --bg:#0f1115;
+      --panel:#1a1d24;
+      --text:#e6e6e6;
+      --muted:#b5b5b5;
+      --border:#333;
+      --ok:#7CFC98;
+      --bad:#ff7a7a;
+      --warn:#ffd27a;
     }
-    body {
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      margin: 0;
-      padding: 20px;
-    }
-    h1, h2, h3 { margin: 0 0 10px; }
-    .container { max-width: 1100px; margin: auto; }
+    body{font-family:system-ui,-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg);color:var(--text);margin:0;padding:20px;}
+    h1,h2,h3{margin:0 0 10px;}
+    .container{max-width:1200px;margin:auto;}
+    .topbar{display:flex;gap:12px;flex-wrap:wrap;align-items:baseline;justify-content:space-between;margin-bottom:12px;}
+    .small{color:var(--muted);font-size:0.92em;}
 
-    .row {
-      display: grid;
-      grid-template-columns: 1.1fr 0.9fr;
-      gap: 14px;
-      align-items: start;
-    }
-    @media (max-width: 900px) {
-      .row { grid-template-columns: 1fr; }
-    }
+    .row{display:grid;grid-template-columns:1.1fr 0.9fr;gap:14px;align-items:start;}
+    @media (max-width: 980px){.row{grid-template-columns:1fr;}}
 
-    .card {
-      background: var(--panel);
-      padding: 14px;
-      border-radius: 12px;
-      border: 1px solid rgba(255,255,255,0.04);
-    }
+    .card{background:var(--panel);padding:14px;border-radius:12px;border:1px solid rgba(255,255,255,0.04);}
+    .hint{color:var(--muted);font-size:0.92em;line-height:1.3;}
 
-    textarea {
-      width: 100%;
-      padding: 10px;
-      background: var(--bg);
-      color: var(--text);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      box-sizing: border-box;
-      outline: none;
-      min-height: 110px;
-      resize: vertical;
-    }
+    .inv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-top:10px;}
+    .slot{background:rgba(0,0,0,0.20);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:10px;}
+    .slot label{display:block;font-weight:700;margin-bottom:6px;}
+    textarea{width:100%;box-sizing:border-box;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:10px;padding:10px;min-height:88px;resize:vertical;outline:none;}
 
-    button {
-      cursor: pointer;
-      background: #222738;
-      color: var(--text);
-      border: 1px solid rgba(255,255,255,0.10);
-      border-radius: 10px;
-      padding: 10px 12px;
-      font-weight: 600;
-    }
-    button:hover { filter: brightness(1.08); }
-    button:active { transform: translateY(1px); }
+    button{cursor:pointer;background:#222738;color:var(--text);border:1px solid rgba(255,255,255,0.10);border-radius:10px;padding:10px 12px;font-weight:700;}
+    button:hover{filter:brightness(1.08);} 
+    button:active{transform:translateY(1px);} 
+    .btn-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;}
 
-    .btn-row {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin-top: 10px;
-    }
+    .toggle-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:10px;}
+    .toggle-row label{display:inline-flex;gap:8px;align-items:center;color:var(--muted);font-size:0.92em;user-select:none;}
 
-    .hint { color: var(--muted); font-size: 0.92em; line-height: 1.3; }
-
-    .pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 10px;
-      border: 1px solid rgba(255,255,255,0.10);
-      border-radius: 999px;
-      background: rgba(0,0,0,0.20);
-      margin: 6px 6px 0 0;
-      user-select: none;
-    }
-    .pill button {
-      padding: 4px 8px;
-      border-radius: 999px;
-      border: 1px solid rgba(255,255,255,0.10);
-      background: rgba(255,255,255,0.06);
-      font-weight: 700;
-    }
-
-    .build {
-      background: var(--panel);
-      padding: 14px;
-      border-radius: 12px;
-      margin-bottom: 14px;
-      border: 1px solid rgba(255,255,255,0.04);
-    }
-
-    .meta { color: var(--muted); font-size: 0.92em; margin-top: -6px; margin-bottom: 8px; }
-    .progress { font-weight: 800; }
-    .ok { color: var(--ok); font-weight: 800; }
-    .bad { color: var(--bad); font-weight: 800; }
-    .warn { color: var(--warn); font-weight: 800; }
-
-    .sub { color: var(--muted); font-size: 0.92em; margin-top: 8px; line-height: 1.35; }
-
-    .topbar {
-      display: flex;
-      align-items: baseline;
-      justify-content: space-between;
-      gap: 12px;
-      flex-wrap: wrap;
-      margin-bottom: 12px;
-    }
-
-    .toggle-row {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      align-items: center;
-    }
-
-    .toggle-row label {
-      display: inline-flex;
-      gap: 8px;
-      align-items: center;
-      color: var(--muted);
-      font-size: 0.92em;
-      user-select: none;
-    }
-
-    input[type="checkbox"] { transform: translateY(1px); }
-
-    .small { font-size: 0.9em; color: var(--muted); }
+    .build{background:rgba(0,0,0,0.20);border:1px solid rgba(255,255,255,0.08);padding:14px;border-radius:12px;margin-bottom:12px;}
+    .meta{color:var(--muted);font-size:0.92em;margin-top:-6px;margin-bottom:8px;}
+    .progress{font-weight:900;}
+    .ok{color:var(--ok);font-weight:900;}
+    .bad{color:var(--bad);font-weight:900;}
+    .warn{color:var(--warn);font-weight:900;}
+    details{margin-top:10px;}
+    summary{cursor:pointer;color:var(--muted);}
+    ul{margin:8px 0 0 18px;padding:0;}
+    li{margin:4px 0;}
   </style>
 </head>
 <body>
   <div class="container">
     <div class="topbar">
       <h1>Lootborn Build Tracker</h1>
-      <div class="small">Inventory saves locally in your browser (no login).</div>
+      <div class="small">Saves in your browser (no login). Inventory is separated by slot.</div>
     </div>
 
     <div class="row">
       <div class="card">
         <h2>Your Inventory</h2>
-        <p class="hint">
-          Add items you own (one per line). Use the item name as written in-game/wiki.
-          Your list is saved automatically.
-        </p>
-
-        <textarea id="bulkInput" placeholder="Example:
-Void Shin
-Planar Shortcut
-Fate Intertwined"></textarea>
-
-        <div class="btn-row">
-          <button id="addBtn">Add items</button>
-          <button id="clearInputBtn">Clear input</button>
-          <button id="clearInvBtn" title="Removes all saved items">Clear inventory</button>
+        <div class="hint">
+          Paste or type the items you own into each slot box. One item per line. Commas also work.
+          This is not a checklist of build items — it is your stash.
         </div>
 
-        <h3 style="margin-top:14px;">Owned items</h3>
-        <div id="ownedList"></div>
-        <div id="ownedEmpty" class="hint" style="display:none; margin-top:6px;">No items saved yet.</div>
+        <div class="btn-row">
+          <button id="saveBtn">Save now</button>
+          <button id="clearBtn" title="Clears all saved inventory">Clear inventory</button>
+        </div>
+
+        <div class="inv-grid" id="invGrid"></div>
       </div>
 
       <div class="card">
-        <h2>Build Progress</h2>
+        <h2>Builds you are closest to</h2>
         <div class="toggle-row">
           <label><input type="checkbox" id="showPlayableOnly" /> Show playable only</label>
-          <label><input type="checkbox" id="sortByOptimal" checked /> Sort by optimal %</label>
+          <label><input type="checkbox" id="sortByOptimal" checked /> Sort by optimal percent</label>
         </div>
         <div id="buildResults" style="margin-top:12px;"></div>
       </div>
@@ -184,220 +87,275 @@ Fate Intertwined"></textarea>
   </div>
 
   <script>
-    // ---- Slots ----
     const slots = [
-      "weapon","helmet","cuirass","belt","greaves","pauldron",
-      "bracers","gauntlet","boots","necklace","amulet","ring"
+      'weapon','helmet','cuirass','belt','greaves','pauldron',
+      'bracers','gauntlet','boots','necklace','amulet','ring'
     ];
 
-    // ---- Builds (we'll keep expanding this array) ----
+    // Builds: add more objects here as you paste them in.
     const builds = [
       {
-        class: "Arcanist",
-        coreSkill: "Fireball",
-        build: "Iceflame",
-        variant: "PvE",
+        class: 'Arcanist',
+        coreSkill: 'Fireball',
+        build: 'Iceflame',
+        variant: 'PvE',
         gear: {
-          weapon: "Fate Intertwined",
-          helmet: "Evil Spirit Skull",
-          cuirass: "Void Cavity",
-          belt: "Resurrection",
-          greaves: "Void Hip",
-          pauldron: "Fairy Whisper",
-          bracers: "Dragon Roar Mark",
-          gauntlet: "Void Arm",
-          boots: "Void Shin",
-          necklace: "Balance Chain",
+          weapon: 'Fate Intertwined',
+          helmet: 'Evil Spirit Skull',
+          cuirass: 'Void Cavity',
+          belt: 'Resurrection',
+          greaves: 'Void Hip',
+          pauldron: 'Fairy Whisper',
+          bracers: 'Dragon Roar Mark',
+          gauntlet: 'Void Arm',
+          boots: 'Void Shin',
+          necklace: 'Balance Chain',
           amulet: "End's Return",
-          ring: "Swift Shadow Finger"
+          ring: 'Swift Shadow Finger'
         },
         alternatives: {
-          boots: ["Planar Shortcut"],
-          amulet: ["Overflow Amulet"],
-          belt: ["Viper Bond"]
+          boots: ['Planar Shortcut'],
+          amulet: ['Overflow Amulet'],
+          belt: ['Viper Bond']
         }
       }
     ];
 
-    // ---- Inventory persistence ----
-    const STORAGE_KEY = "lootborn_inventory_v1";
+    const STORAGE_KEY = 'lootborn_inventory_by_slot_v1';
 
-    /** @type {Set<string>} */
-    let inventory = new Set();
+    // inventoryText[slot] = raw textarea string
+    const inventoryText = {};
 
-    function normalizeName(name) {
-      return (name || "").trim().replace(/\s+/g, " ");
+    function makeEmptyInventory(){
+      const obj = {};
+      for (const s of slots) obj[s] = '';
+      return obj;
     }
 
-    function loadInventory() {
-      try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if (!raw) return;
-        const arr = JSON.parse(raw);
-        if (Array.isArray(arr)) {
-          inventory = new Set(arr.map(normalizeName).filter(Boolean));
+    function normalizeSpaces(s){
+      let t = (s || '').trim();
+      while (t.indexOf('  ') !== -1) t = t.replace('  ',' ');
+      return t;
+    }
+
+    function parseSlotItems(text){
+      const clean = (text || '').split('
+').join('');
+      const lines = clean.split('
+');
+      const out = [];
+      for (const line of lines){
+        const parts = line.split(',');
+        for (const p of parts){
+          const item = normalizeSpaces(p);
+          if (item) out.push(item);
         }
-      } catch (_) {
-        // ignore
+      }
+      // unique
+      const seen = {};
+      const uniq = [];
+      for (const it of out){
+        if (!seen[it]){ seen[it] = true; uniq.push(it); }
+      }
+      return uniq;
+    }
+
+    function inventorySets(){
+      const sets = {};
+      for (const s of slots){
+        const items = parseSlotItems(inventoryText[s]);
+        const map = {};
+        for (const it of items) map[it] = true;
+        sets[s] = map;
+      }
+      return sets;
+    }
+
+    function loadInventory(){
+      try{
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return makeEmptyInventory();
+        const obj = JSON.parse(raw);
+        const out = makeEmptyInventory();
+        for (const s of slots){
+          if (typeof obj[s] === 'string') out[s] = obj[s];
+        }
+        return out;
+      }catch(e){
+        return makeEmptyInventory();
       }
     }
 
-    function saveInventory() {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(Array.from(inventory)));
-    }
-
-    function addItemsFromTextarea() {
-      const ta = document.getElementById("bulkInput");
-      const lines = ta.value.split(/\r?\n/).map(normalizeName).filter(Boolean);
-      let added = 0;
-      lines.forEach(line => {
-        if (!inventory.has(line)) {
-          inventory.add(line);
-          added++;
-        }
-      });
-      if (added > 0) saveInventory();
-      renderOwned();
+    function saveInventory(){
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(inventoryText));
       renderBuilds();
     }
 
-    function removeItem(name) {
-      inventory.delete(name);
+    function clearInventory(){
+      const empty = makeEmptyInventory();
+      for (const s of slots) inventoryText[s] = empty[s];
+      for (const s of slots){
+        const ta = document.getElementById('inv_' + s);
+        if (ta) ta.value = '';
+      }
       saveInventory();
-      renderOwned();
-      renderBuilds();
     }
 
-    function clearInventory() {
-      inventory.clear();
-      saveInventory();
-      renderOwned();
-      renderBuilds();
+    function titleCase(s){
+      if (!s) return '';
+      return s.charAt(0).toUpperCase() + s.slice(1);
     }
 
-    function renderOwned() {
-      const wrap = document.getElementById("ownedList");
-      const empty = document.getElementById("ownedEmpty");
-      wrap.innerHTML = "";
-
-      const items = Array.from(inventory).sort((a,b) => a.localeCompare(b));
-      empty.style.display = items.length ? "none" : "block";
-
-      items.forEach(item => {
-        const pill = document.createElement("span");
-        pill.className = "pill";
-        pill.innerHTML = `<span>${escapeHtml(item)}</span><button title="Remove">×</button>`;
-        pill.querySelector("button").addEventListener("click", () => removeItem(item));
-        wrap.appendChild(pill);
-      });
+    function escapeHtml(str){
+      return String(str)
+        .split('&').join('&amp;')
+        .split('<').join('&lt;')
+        .split('>').join('&gt;')
+        .split('"').join('&quot;')
+        .split("'").join('&#039;');
     }
 
-    function buildScore(build) {
+    function buildScore(build, invSets){
       const missing = [];
       const substitutes = [];
-
       let requiredCount = 0;
       let optimalOwned = 0;
       let playable = true;
 
-      slots.forEach(slot => {
-        const required = build.gear?.[slot];
-        if (!required) return;
+      for (const slot of slots){
+        const required = build.gear && build.gear[slot];
+        if (!required) continue;
         requiredCount++;
 
-        if (inventory.has(required)) {
+        if (invSets[slot] && invSets[slot][required]){
           optimalOwned++;
-          return;
+          continue;
         }
 
-        const alts = build.alternatives?.[slot] || [];
-        const ownedAlt = alts.find(a => inventory.has(a));
+        const alts = (build.alternatives && build.alternatives[slot]) ? build.alternatives[slot] : [];
+        let ownedAlt = '';
+        for (const a of alts){
+          if (invSets[slot] && invSets[slot][a]){ ownedAlt = a; break; }
+        }
 
-        if (ownedAlt) {
-          substitutes.push(`${titleCase(slot)} → ${ownedAlt} (missing ${required})`);
+        if (ownedAlt){
+          substitutes.push(titleCase(slot) + ' -> ' + ownedAlt + ' (missing ' + required + ')');
         } else {
           playable = false;
-          missing.push(`${titleCase(slot)}: ${required}`);
+          missing.push(titleCase(slot) + ': ' + required);
         }
-      });
+      }
 
       const optimalPct = requiredCount ? Math.round((optimalOwned / requiredCount) * 100) : 0;
       return { requiredCount, optimalOwned, optimalPct, playable, missing, substitutes };
     }
 
-    function renderBuilds() {
-      const out = document.getElementById("buildResults");
-      const playableOnly = document.getElementById("showPlayableOnly").checked;
-      const sortByOptimal = document.getElementById("sortByOptimal").checked;
+    function renderBuilds(){
+      const out = document.getElementById('buildResults');
+      const playableOnly = document.getElementById('showPlayableOnly').checked;
+      const sortByOptimal = document.getElementById('sortByOptimal').checked;
 
-      const rows = builds.map(b => ({ b, s: buildScore(b) }));
+      const invSets = inventorySets();
+      const rows = builds.map(b => ({ b: b, s: buildScore(b, invSets) }));
       const filtered = playableOnly ? rows.filter(r => r.s.playable) : rows;
 
-      if (sortByOptimal) filtered.sort((x,y) => y.s.optimalPct - x.s.optimalPct);
+      if (sortByOptimal){
+        filtered.sort((a,b) => b.s.optimalPct - a.s.optimalPct);
+      }
 
-      out.innerHTML = "";
-      if (filtered.length === 0) {
-        out.innerHTML = `<div class="hint">No builds match your filter yet.</div>`;
+      out.innerHTML = '';
+
+      if (!filtered.length){
+        out.innerHTML = '<div class="hint">No builds match your current inventory.</div>';
         return;
       }
 
-      filtered.forEach(({ b, s }) => {
-        const div = document.createElement("div");
-        div.className = "build";
+      for (const row of filtered){
+        const b = row.b;
+        const s = row.s;
 
-        const playableLabel = s.playable
-          ? `<span class="ok">Playable</span>`
-          : `<span class="bad">Not playable</span>`;
+        const playableLabel = s.playable ? '<span class="ok">Playable</span>' : '<span class="bad">Not playable</span>';
 
-        div.innerHTML = `
-          <h3>${escapeHtml(b.build)} – ${escapeHtml(b.variant)}</h3>
-          <div class="meta">${escapeHtml(b.class)} • ${escapeHtml(b.coreSkill)} • ${s.optimalOwned}/${s.requiredCount} optimal</div>
-          <div class="progress">Optimal: ${s.optimalPct}%</div>
-          <div style="margin-top:6px;">${playableLabel}</div>
-          ${s.missing.length ? `<div class="sub"><span class="bad">Missing:</span><br>${s.missing.map(escapeHtml).join("<br>")}</div>` : ""}
-          ${s.substitutes.length ? `<div class="sub"><span class="warn">Substitutes:</span><br>${s.substitutes.map(escapeHtml).join("<br>")}</div>` : ""}
-        `;
+        const div = document.createElement('div');
+        div.className = 'build';
+
+        const detailsNeeded = (s.missing.length > 0) || (s.substitutes.length > 0);
+
+        div.innerHTML =
+          '<h3>' + escapeHtml(b.build) + ' – ' + escapeHtml(b.variant) + '</h3>' +
+          '<div class="meta">' + escapeHtml(b.class) + ' • ' + escapeHtml(b.coreSkill) + ' • ' + s.optimalOwned + '/' + s.requiredCount + ' optimal</div>' +
+          '<div class="progress">Optimal: ' + s.optimalPct + '%</div>' +
+          '<div style="margin-top:6px;">' + playableLabel + '</div>' +
+          (detailsNeeded ? buildDetailsHtml(s) : '');
 
         out.appendChild(div);
-      });
-    }
-
-    function titleCase(s) {
-      return (s || "").replace(/\b\w/g, c => c.toUpperCase());
-    }
-
-    function escapeHtml(str) {
-      return String(str)
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
-    }
-
-    // ---- Wire up UI ----
-    document.getElementById("addBtn").addEventListener("click", addItemsFromTextarea);
-    document.getElementById("clearInputBtn").addEventListener("click", () => {
-      document.getElementById("bulkInput").value = "";
-    });
-    document.getElementById("clearInvBtn").addEventListener("click", () => {
-      if (confirm("Clear your saved inventory?")) clearInventory();
-    });
-
-    document.getElementById("showPlayableOnly").addEventListener("change", renderBuilds);
-    document.getElementById("sortByOptimal").addEventListener("change", renderBuilds);
-
-    // Ctrl/Cmd+Enter adds items quickly
-    document.getElementById("bulkInput").addEventListener("keydown", (e) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
-        e.preventDefault();
-        addItemsFromTextarea();
       }
+    }
+
+    function buildDetailsHtml(score){
+      let html = '<details><summary>Details</summary>';
+
+      if (score.missing.length){
+        html += '<div style="margin-top:8px;"><span class="bad">Missing</span><ul>';
+        for (const m of score.missing){ html += '<li>' + escapeHtml(m) + '</li>'; }
+        html += '</ul></div>';
+      }
+
+      if (score.substitutes.length){
+        html += '<div style="margin-top:8px;"><span class="warn">Substitutes</span><ul>';
+        for (const sub of score.substitutes){ html += '<li>' + escapeHtml(sub) + '</li>'; }
+        html += '</ul></div>';
+      }
+
+      html += '</details>';
+      return html;
+    }
+
+    function createInventoryUI(){
+      const grid = document.getElementById('invGrid');
+      grid.innerHTML = '';
+
+      for (const s of slots){
+        const div = document.createElement('div');
+        div.className = 'slot';
+        div.innerHTML =
+          '<label for="inv_' + s + '">' + titleCase(s) + '</label>' +
+          '<textarea id="inv_' + s + '" placeholder="One per line"></textarea>';
+        grid.appendChild(div);
+      }
+
+      for (const s of slots){
+        const ta = document.getElementById('inv_' + s);
+        ta.value = inventoryText[s] || '';
+        ta.addEventListener('input', () => {
+          inventoryText[s] = ta.value;
+          scheduleAutosave();
+        });
+      }
+    }
+
+    let autosaveTimer = null;
+    function scheduleAutosave(){
+      if (autosaveTimer) clearTimeout(autosaveTimer);
+      autosaveTimer = setTimeout(() => {
+        autosaveTimer = null;
+        saveInventory();
+      }, 500);
+    }
+
+    // --- Wire up ---
+    document.getElementById('saveBtn').addEventListener('click', saveInventory);
+    document.getElementById('clearBtn').addEventListener('click', () => {
+      if (confirm('Clear your saved inventory?')) clearInventory();
     });
 
-    // ---- Init ----
-    loadInventory();
-    renderOwned();
+    document.getElementById('showPlayableOnly').addEventListener('change', renderBuilds);
+    document.getElementById('sortByOptimal').addEventListener('change', renderBuilds);
+
+    // --- Init ---
+    const loaded = loadInventory();
+    for (const s of slots) inventoryText[s] = loaded[s];
+    createInventoryUI();
     renderBuilds();
   </script>
 </body>
