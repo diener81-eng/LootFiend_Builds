@@ -108,6 +108,11 @@
     const VERSION = "3.6";
 
     document.addEventListener("DOMContentLoaded", () => {
+      // Keeps build detail panels open across re-renders
+      const openDetails = new Set();
+      function buildKey(b){
+        return [b.class, b.coreSkill, b.build, b.variant].join("|");
+      }
       const slots = [
         "weapon","helmet","cuirass","belt","greaves","pauldron",
         "bracers","gauntlet","boots","necklace","amulet","ring"
@@ -994,10 +999,12 @@
 
       // Item names are wrapped in <span class="item"> so they are always white.
       function gearDetailsHtml(build) {
+        const key = buildKey(build);
+        const isOpen = openDetails.has(key);
         const rows = buildGearBreakdown(build);
         const wiki = wikiUrlForBuild(build.build);
 
-        let html = '<details><summary>Build details</summary>';
+        let html = '<details ' + (isOpen ? 'open ' : '') + 'data-buildkey="' + escapeHtml(key) + '"><summary>Build details</summary>';
         html += '<div style="margin-top:8px; display:flex; gap:10px; flex-wrap:wrap; align-items:center;">';
         html += '<a href="' + escapeHtml(wiki) + '" target="_blank" rel="noopener" style="color: var(--warn); text-decoration: none; font-weight: 900;">Open wiki page</a>';
         html += '<span class="small">(opens in new tab)</span>';
@@ -1086,6 +1093,17 @@
 
           out.appendChild(div);
         }
+
+        // Restore and persist open/closed state for detail panels
+        out.querySelectorAll('details[data-buildkey]').forEach(d => {
+          d.addEventListener('toggle', () => {
+            const k = d.getAttribute('data-buildkey');
+            if (!k) return;
+            if (d.open) openDetails.add(k);
+            else openDetails.delete(k);
+          });
+        });
+      }
       }
 
       function renderInventory() {
