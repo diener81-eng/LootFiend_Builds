@@ -55,7 +55,7 @@
 <body>
   <div class="container">
     <div class="topbar">
-      <h1>Lootborn Build Tracker v1.1</h1>
+      <h1>Lootborn Build Tracker v1.2</h1>
       <div class="small">Saves in your browser (no login). Inventory is separated by slot.</div>
     </div>
 
@@ -88,7 +88,7 @@
 
   <script>
   // Version marker: bump this each revision so you can confirm the live site updated.
-  const VERSION = "1.1";
+  const VERSION = "1.2";
 
   window.addEventListener("DOMContentLoaded", () => {
     const slots = [
@@ -122,6 +122,27 @@
           amulet: ["Overflow Amulet"],
           belt: ["Viper Bond"]
         }
+      },
+      {
+        class: "Arcanist",
+        coreSkill: "Fireball",
+        build: "Iceflame",
+        variant: "Ancient God PvE",
+        gear: {
+          weapon: "Ancient God's Call",
+          helmet: "Dragon Claw Visage",
+          cuirass: "Dragon Bone Armor",
+          belt: "Dragon Soul Smile",
+          greaves: "Dragon Spine Leggings",
+          pauldron: "Fairy Whisper",
+          bracers: "Dragon Roar Mark",
+          gauntlet: "Dragon Fury Grip",
+          boots: "Dragon Hyun Walker",
+          necklace: "Temporal Pendant",
+          amulet: "End's Return",
+          ring: "Swift Shadow Finger"
+        },
+        alternatives: {}
       }
     ];
 
