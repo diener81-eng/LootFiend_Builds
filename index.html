@@ -86,7 +86,7 @@
   <div class="container">
     <div class="topbar">
       <div>
-        <h1>Lootborn Build Tracker v3.10</h1>
+        <h1>Lootborn Build Tracker v3.11</h1>
         <div class="small">Saves in your browser (no login). Arcanist and Savage are stored separately because their stash items are different.</div>
       </div>
       <div class="class-switch" role="group" aria-label="Class switch">
@@ -1148,7 +1148,7 @@
 
             const extraAlts = r.ownedAlts.slice(1);
             if (extraAlts.length > 0) {
-              const extraStr = extraAlts.map(a => '<span class="item">' + escapeHtml(a) + '</span>').join(', ');
+              const extraStr = extraAlts.map(a => itemSpan(a)).join(', ');
               html += '<div class="small" style="margin-left:22px; margin-top:2px;">Other owned substitutes: ' + extraStr + '</div>';
             }
 
@@ -1157,9 +1157,13 @@
           }
 
           // Missing
-          html += '<li><span class="bad">✗</span> ' + slotLbl + '<span class="item">' + escapeHtml(r.required) + '</span> <span class="small">(missing)</span>';
+html += '<li><span class="bad">✗</span> ' +
+  slotLbl +
+  itemSpan(r.required) + ' ' +
+  '<span class="small">(missing)</span>';
+
           if (r.altList.length > 0) {
-            const subsStr = r.altList.map(a => '<span class="item">' + escapeHtml(a) + '</span>').join(', ');
+            const subsStr = r.altList.map(a => itemSpan(a)).join(', ');
             html += '<div class="small" style="margin-left:22px; margin-top:2px;">Substitutes: ' + subsStr + '</div>';
           }
           html += '</li>';
