@@ -14,11 +14,13 @@
       --ok:#7CFC98;
       --bad:#ff7a7a;
       --warn:#ffd27a;
+      --btn:#222738;
+      --btnActive:#2f3750;
     }
     body{font-family:system-ui,-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg);color:var(--text);margin:0;padding:20px;}
     h1,h2,h3{margin:0 0 10px;}
     .container{max-width:1200px;margin:auto;}
-    .topbar{display:flex;gap:12px;flex-wrap:wrap;align-items:baseline;justify-content:space-between;margin-bottom:12px;}
+    .topbar{display:flex;gap:12px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin-bottom:12px;}
     .small{color:var(--muted);font-size:0.92em;}
 
     .row{display:grid;grid-template-columns:1.1fr 0.9fr;gap:14px;align-items:start;}
@@ -31,10 +33,15 @@
     .slot{background:rgba(0,0,0,0.20);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:10px;}
     .slot label{display:block;font-weight:700;margin-bottom:6px;}
 
-    button{cursor:pointer;background:#222738;color:var(--text);border:1px solid rgba(255,255,255,0.10);border-radius:10px;padding:10px 12px;font-weight:700;}
-    button:hover{filter:brightness(1.08);}
-    button:active{transform:translateY(1px);}
+    button{cursor:pointer;background:var(--btn);color:var(--text);border:1px solid rgba(255,255,255,0.10);border-radius:10px;padding:10px 12px;font-weight:800;}
+    button:hover{filter:brightness(1.08);} 
+    button:active{transform:translateY(1px);} 
+
     .btn-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;}
+
+    .class-switch{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+    .class-btn{background:var(--btn);}
+    .class-btn.active{background:var(--btnActive);border-color:rgba(255,255,255,0.20);}
 
     .toggle-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:10px;}
     .toggle-row label{display:inline-flex;gap:8px;align-items:center;color:var(--muted);font-size:0.92em;user-select:none;}
@@ -45,17 +52,28 @@
     .ok{color:var(--ok);font-weight:900;}
     .bad{color:var(--bad);font-weight:900;}
     .warn{color:var(--warn);font-weight:900;}
+
     details{margin-top:10px;}
     summary{cursor:pointer;color:var(--muted);}
     ul{margin:8px 0 0 18px;padding:0;}
     li{margin:4px 0;}
+
+    /* Item text should always be white */
+    .item{color:var(--text);font-weight:800;}
   </style>
 </head>
 <body>
   <div class="container">
     <div class="topbar">
-      <h1>Lootborn Build Tracker v3.5</h1>
-      <div class="small">Saves in your browser (no login). Arcanist and Savage inventories are stored separately, because their stash items are different.</div>
+      <div>
+        <h1>Lootborn Build Tracker v3.6</h1>
+        <div class="small">Saves in your browser (no login). Arcanist and Savage are stored separately because their stash items are different.</div>
+      </div>
+
+      <div class="class-switch" aria-label="Class switch">
+        <button id="btnArcanist" class="class-btn" type="button">Arcanist Builds</button>
+        <button id="btnSavage" class="class-btn" type="button">Savage Builds</button>
+      </div>
     </div>
 
     <div class="row">
@@ -67,8 +85,8 @@
         </div>
 
         <div class="btn-row">
-          <button id="saveBtn">Save now</button>
-          <button id="clearBtn" title="Clears all saved inventory for the selected class">Clear inventory</button>
+          <button id="saveBtn" type="button">Save now</button>
+          <button id="clearBtn" type="button" title="Clears all saved inventory for the selected class">Clear inventory</button>
         </div>
 
         <div class="inv-grid" id="invGrid"></div>
@@ -79,12 +97,6 @@
         <div class="toggle-row">
           <label><input type="checkbox" id="showPlayableOnly" /> Show playable only</label>
           <label><input type="checkbox" id="sortByOptimal" checked /> Sort by optimal percent</label>
-          <label>Class
-            <select id="classFilter" style="margin-left:6px; background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 8px; padding: 6px 8px;">
-              <option value="Arcanist" selected>Arcanist</option>
-              <option value="Savage">Savage</option>
-            </select>
-          </label>
         </div>
         <div id="buildResults" style="margin-top:12px;"></div>
       </div>
@@ -92,8 +104,8 @@
   </div>
 
   <script>
-    // Version marker: bump this each revision so you can confirm the live site updated.
-    const VERSION = "3.5";
+    // Version marker: bump each revision so you can confirm the live site updated.
+    const VERSION = "3.6";
 
     document.addEventListener("DOMContentLoaded", () => {
       const slots = [
@@ -136,7 +148,7 @@
         return STORAGE_KEY_PREFIX + "_" + String(cls || "").toLowerCase();
       }
 
-      // Builds list
+      // Builds
       const builds = [
         // --- Arcanist builds ---
         {
@@ -866,16 +878,6 @@
         return WIKI_BASE + encodeURIComponent(slug);
       }
 
-      function getClassFilter() {
-        const el = document.getElementById("classFilter");
-        return el ? el.value : "Arcanist";
-      }
-
-      function getFilteredBuilds() {
-        const cf = getClassFilter();
-        return builds.filter(b => b.class === cf);
-      }
-
       function emptyInventory() {
         const inv = {};
         for (const slot of slots) inv[slot] = new Set();
@@ -904,8 +906,13 @@
         localStorage.setItem(storageKeyFor(cls), JSON.stringify(obj));
       }
 
-      let activeClass = getClassFilter();
+      // Active class is controlled by the TOP buttons
+      let activeClass = "Arcanist";
       let inventory = loadInventory(activeClass);
+
+      function getFilteredBuilds() {
+        return builds.filter(b => b.class === activeClass);
+      }
 
       function buildItemCatalog(filteredBuilds) {
         const bySlot = {};
@@ -979,29 +986,20 @@
           const hasRequired = inventory[slot].has(required);
           const ownedAlts = altList.filter(a => inventory[slot].has(a));
 
-          rows.push({
-            slot,
-            required,
-            altList,
-            hasRequired,
-            ownedAlts
-          });
+          rows.push({ slot, required, altList, hasRequired, ownedAlts });
         }
 
         return rows;
       }
 
-      // Details rules:
-      // - If you own optimal: show it as optimal; if you also own substitutes, list them under it.
-      // - If you don't own optimal but own substitute: show substitute as playable-not-optimal; show optimal under it.
-      // - If you own neither: show missing; list substitutes.
+      // Item names are wrapped in <span class="item"> so they are always white.
       function gearDetailsHtml(build) {
         const rows = buildGearBreakdown(build);
         const wiki = wikiUrlForBuild(build.build);
 
         let html = '<details><summary>Build details</summary>';
         html += '<div style="margin-top:8px; display:flex; gap:10px; flex-wrap:wrap; align-items:center;">';
-        html += '<a href="' + escapeHtml(wiki) + '" target="_blank" rel="noopener" style="color: var(--warn); text-decoration: none; font-weight: 800;">Open wiki page</a>';
+        html += '<a href="' + escapeHtml(wiki) + '" target="_blank" rel="noopener" style="color: var(--warn); text-decoration: none; font-weight: 900;">Open wiki page</a>';
         html += '<span class="small">(opens in new tab)</span>';
         html += '</div>';
 
@@ -1010,30 +1008,39 @@
         for (const r of rows) {
           const slotLabel = '<b>' + escapeHtml(titleCase(r.slot)) + '</b>: ';
 
+          // Own optimal
           if (r.hasRequired) {
-            html += '<li><span class="ok">✓</span> ' + slotLabel + escapeHtml(r.required) + ' <span class="small">(optimal)</span>';
+            html += '<li><span class="ok">✓</span> ' + slotLabel + '<span class="item">' + escapeHtml(r.required) + '</span> <span class="small">(optimal)</span>';
+
             if (r.ownedAlts.length > 0) {
-              html += '<div class="small" style="margin-left:22px; margin-top:2px;">Also owned substitutes: ' + escapeHtml(r.ownedAlts.join(", ")) + '</div>';
+              const ownedAltStr = r.ownedAlts.map(a => '<span class="item">' + escapeHtml(a) + '</span>').join(', ');
+              html += '<div class="small" style="margin-left:22px; margin-top:2px;">Also owned substitutes: ' + ownedAltStr + '</div>';
             }
+
             html += '</li>';
             continue;
           }
 
+          // Own substitute only
           if (r.ownedAlts.length > 0) {
-            html += '<li><span class="warn">~</span> ' + slotLabel + escapeHtml(r.ownedAlts[0]) + ' <span class="small">(playable, not optimal)</span>';
-            html += '<div class="small" style="margin-left:22px; margin-top:2px;">Optimal item: ' + escapeHtml(r.required) + '</div>';
+            html += '<li><span class="warn">~</span> ' + slotLabel + '<span class="item">' + escapeHtml(r.ownedAlts[0]) + '</span> <span class="small">(playable, not optimal)</span>';
+            html += '<div class="small" style="margin-left:22px; margin-top:2px;">Optimal item: <span class="item">' + escapeHtml(r.required) + '</span></div>';
 
             const extraAlts = r.ownedAlts.slice(1);
             if (extraAlts.length > 0) {
-              html += '<div class="small" style="margin-left:22px; margin-top:2px;">Other owned substitutes: ' + escapeHtml(extraAlts.join(", ")) + '</div>';
+              const extraStr = extraAlts.map(a => '<span class="item">' + escapeHtml(a) + '</span>').join(', ');
+              html += '<div class="small" style="margin-left:22px; margin-top:2px;">Other owned substitutes: ' + extraStr + '</div>';
             }
+
             html += '</li>';
             continue;
           }
 
-          html += '<li><span class="bad">✗</span> ' + slotLabel + escapeHtml(r.required) + ' <span class="small">(missing)</span>';
+          // Missing
+          html += '<li><span class="bad">✗</span> ' + slotLabel + '<span class="item">' + escapeHtml(r.required) + '</span> <span class="small">(missing)</span>';
           if (r.altList.length > 0) {
-            html += '<div class="small" style="margin-left:22px; margin-top:2px;">Substitutes: ' + escapeHtml(r.altList.join(", ")) + '</div>';
+            const subsStr = r.altList.map(a => '<span class="item">' + escapeHtml(a) + '</span>').join(', ');
+            html += '<div class="small" style="margin-left:22px; margin-top:2px;">Substitutes: ' + subsStr + '</div>';
           }
           html += '</li>';
         }
@@ -1049,7 +1056,7 @@
 
         const filteredBuilds = getFilteredBuilds();
         if (!filteredBuilds.length) {
-          out.innerHTML = '<div class="hint">No ' + escapeHtml(getClassFilter()) + ' builds added yet.</div>';
+          out.innerHTML = '<div class="hint">No ' + escapeHtml(activeClass) + ' builds added yet.</div>';
           return;
         }
 
@@ -1087,7 +1094,7 @@
 
         const filteredBuilds = getFilteredBuilds();
         if (!filteredBuilds.length) {
-          grid.innerHTML = '<div class="hint">No ' + escapeHtml(getClassFilter()) + ' items yet (add builds for this class to populate the item list).</div>';
+          grid.innerHTML = '<div class="hint">No ' + escapeHtml(activeClass) + ' items yet (add builds for this class to populate the item list).</div>';
           return;
         }
 
@@ -1116,7 +1123,7 @@
             html +=
               '<div style="display:flex; gap:10px; align-items:flex-start; margin:6px 0;">' +
                 '<input type="checkbox" id="' + escapeHtml(id) + '" data-slot="' + escapeHtml(slot) + '" data-item="' + escapeHtml(item) + '" ' + checked + ' />' +
-                '<label for="' + escapeHtml(id) + '" style="margin:0; font-weight:600; cursor:pointer;">' + escapeHtml(item) + '</label>' +
+                '<label for="' + escapeHtml(id) + '" style="margin:0; font-weight:650; cursor:pointer;">' + escapeHtml(item) + '</label>' +
               '</div>';
           }
           html += '</div>';
@@ -1141,36 +1148,71 @@
         });
       }
 
+      // --- Minimal self-tests (runs in console; does not affect UI) ---
+      function runSelfTests() {
+        try {
+          console.assert(normalizeItemName("Ancient God Call") === "Ancient God's Call", "normalize alias: Ancient God Call");
+          console.assert(normalizeItemName("Pack Binding") === "Pact Binding", "normalize alias: Pack Binding");
+          console.assert(normalizeItemName("Dragon Hyun Walker") === "Dragon Hymn Walker", "normalize alias: Dragon Hyun Walker");
+
+          const arcanistCount = builds.filter(b => b.class === "Arcanist").length;
+          const savageCount = builds.filter(b => b.class === "Savage").length;
+          console.assert(arcanistCount > 0, "self-test: should have Arcanist builds");
+          console.assert(savageCount > 0, "self-test: should have Savage builds");
+
+          const inv = emptyInventory();
+          inv.weapon.add("Fate Intertwined");
+          inventory = inv;
+          const score = buildScore(builds.find(b => b.class === "Arcanist"));
+          console.assert(typeof score.optimalPct === "number", "self-test: buildScore returns numbers");
+        } catch (e) {
+          console.warn("Self-tests failed:", e);
+        }
+      }
+
+      // --- Controls ---
       function setActiveClass(cls) {
+        if (cls !== "Arcanist" && cls !== "Savage") return;
+
+        // persist current inventory first
+        saveInventory(inventory, activeClass);
+
         activeClass = cls;
         inventory = loadInventory(activeClass);
+
+        // button UI
+        const aBtn = document.getElementById("btnArcanist");
+        const sBtn = document.getElementById("btnSavage");
+        aBtn.classList.toggle("active", activeClass === "Arcanist");
+        sBtn.classList.toggle("active", activeClass === "Savage");
+
         renderInventory();
         renderBuilds();
       }
 
-      // Controls
-      document.getElementById("saveBtn").addEventListener("click", () => {
+      document.getElementById("btnArcanist").addEventListener("click", () => setActiveClass("Arcanist"));
+      document.getElementById("btnSavage").addEventListener("click", () => setActiveClass("Savage"));
+
+      document.getElementById('clearBtn').addEventListener('click', () => {
+        if (confirm('Clear your saved ' + activeClass + ' inventory?')) {
+          inventory = emptyInventory();
+          saveInventory(inventory, activeClass);
+          renderInventory();
+          renderBuilds();
+        }
+      });
+
+      document.getElementById('saveBtn').addEventListener('click', () => {
         saveInventory(inventory, activeClass);
         renderBuilds();
-        renderInventory();
       });
 
-      document.getElementById("clearBtn").addEventListener("click", () => {
-        inventory = emptyInventory();
-        saveInventory(inventory, activeClass);
-        renderBuilds();
-        renderInventory();
-      });
+      document.getElementById('showPlayableOnly').addEventListener('change', renderBuilds);
+      document.getElementById('sortByOptimal').addEventListener('change', renderBuilds);
 
-      document.getElementById("showPlayableOnly").addEventListener("change", () => renderBuilds());
-      document.getElementById("sortByOptimal").addEventListener("change", () => renderBuilds());
-
-      document.getElementById("classFilter").addEventListener("change", (e) => {
-        setActiveClass(e.target.value);
-      });
-
-      // Initial render
-      setActiveClass(getClassFilter());
+      // Init
+      runSelfTests();
+      setActiveClass("Arcanist");
     });
   </script>
 </body>
