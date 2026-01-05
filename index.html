@@ -30,15 +30,15 @@
     .inv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-top:10px;}
     .slot{background:rgba(0,0,0,0.20);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:10px;}
     .slot label{display:block;font-weight:700;margin-bottom:6px;}
-    textarea{width:100%;box-sizing:border-box;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:10px;padding:10px;min-height:88px;resize:vertical;outline:none;}
 
     button{cursor:pointer;background:#222738;color:var(--text);border:1px solid rgba(255,255,255,0.10);border-radius:10px;padding:10px 12px;font-weight:700;}
-    button:hover{filter:brightness(1.08);} 
-    button:active{transform:translateY(1px);} 
+    button:hover{filter:brightness(1.08);}
+    button:active{transform:translateY(1px);}
     .btn-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;}
 
     .toggle-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:10px;}
     .toggle-row label{display:inline-flex;gap:8px;align-items:center;color:var(--muted);font-size:0.92em;user-select:none;}
+    select{background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:6px 8px;}
 
     .build{background:rgba(0,0,0,0.20);border:1px solid rgba(255,255,255,0.08);padding:14px;border-radius:12px;margin-bottom:12px;}
     .meta{color:var(--muted);font-size:0.92em;margin-top:-6px;margin-bottom:8px;}
@@ -55,8 +55,8 @@
 <body>
   <div class="container">
     <div class="topbar">
-      <h1>Lootborn Build Tracker v1.8</h1>
-      <div class="small">Saves in your browser (no login). Inventory is separated by slot.</div>
+      <h1>Lootborn Build Tracker v1.9</h1>
+      <div class="small">Saves in your browser (no login). Arcanist and Savage inventories are stored separately.</div>
     </div>
 
     <div class="row">
@@ -64,12 +64,12 @@
         <h2>Your Inventory</h2>
         <div class="hint">
           Check the items you own. This list is auto-generated from all items used in the builds (including substitutes).
-          Your selections save automatically in your browser.
+          Your selections save automatically in your browser, separately for Arcanist vs Savage.
         </div>
 
         <div class="btn-row">
           <button id="saveBtn">Save now</button>
-          <button id="clearBtn" title="Clears all saved inventory">Clear inventory</button>
+          <button id="clearBtn" title="Clears the selected class inventory only">Clear inventory (this class)</button>
         </div>
 
         <div class="inv-grid" id="invGrid"></div>
@@ -80,15 +80,21 @@
         <div class="toggle-row">
           <label><input type="checkbox" id="showPlayableOnly" /> Show playable only</label>
           <label><input type="checkbox" id="sortByOptimal" checked /> Sort by optimal percent</label>
+          <label>Class
+            <select id="classFilter">
+              <option value="Arcanist" selected>Arcanist</option>
+              <option value="Savage">Savage</option>
+            </select>
+          </label>
         </div>
         <div id="buildResults" style="margin-top:12px;"></div>
       </div>
     </div>
   </div>
 
-  <script>
+<script>
   // Version marker: bump this each revision so you can confirm the live site updated.
-  const VERSION = "1.8";
+  const VERSION = "1.9";
 
   window.addEventListener("DOMContentLoaded", () => {
     const slots = [
@@ -97,6 +103,12 @@
     ];
 
     const WIKI_BASE = "https://lootbornwarriors.miraheze.org/wiki/";
+
+    // --- Separate storage per class ---
+    const STORAGE_KEY_PREFIX = "lootborn_inventory_checkboxes_v2";
+    function storageKeyFor(cls) {
+      return `${STORAGE_KEY_PREFIX}_${String(cls || "").toLowerCase()}`;
+    }
 
     // Builds: add more objects here as you paste them in.
     const builds = [
@@ -463,20 +475,6 @@
       }
     ];
 
-    const STORAGE_KEY = "lootborn_inventory_checkboxes_v1";
-
-    // --- Inject class filter UI (no HTML rewrite required) ---
-    const toggleRow = document.querySelector("#buildResults")?.previousElementSibling;
-    if (toggleRow && toggleRow.classList.contains("toggle-row")) {
-      const wrap = document.createElement("label");
-      wrap.innerHTML = `Class <select id="classFilter" style="margin-left:6px; background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 8px; padding: 6px 8px;">
-        <option value="all">All</option>
-        <option value="Arcanist">Arcanist</option>
-        <option value="Savage">Savage</option>
-      </select>`;
-      toggleRow.appendChild(wrap);
-    }
-
     function titleCase(s) {
       if (!s) return "";
       return s.charAt(0).toUpperCase() + s.slice(1);
@@ -498,12 +496,11 @@
 
     function getClassFilter() {
       const el = document.getElementById("classFilter");
-      return el ? el.value : "all";
+      return el ? el.value : "Arcanist";
     }
 
     function getFilteredBuilds() {
       const cf = getClassFilter();
-      if (cf === "all") return builds;
       return builds.filter(b => b.class === cf);
     }
 
@@ -514,10 +511,10 @@
       return inv;
     }
 
-    function loadInventory() {
+    function loadInventory(cls) {
       const inv = emptyInventory();
       try {
-        const raw = localStorage.getItem(STORAGE_KEY);
+        const raw = localStorage.getItem(storageKeyFor(cls));
         if (!raw) return inv;
         const obj = JSON.parse(raw);
         for (const slot of slots) {
@@ -530,22 +527,23 @@
       return inv;
     }
 
-    function saveInventory(inv) {
+    function saveInventory(inv, cls) {
       const obj = {};
       for (const slot of slots) obj[slot] = Array.from(inv[slot]);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(obj));
+      localStorage.setItem(storageKeyFor(cls), JSON.stringify(obj));
     }
 
-    let inventory = loadInventory();
+    let activeClass = getClassFilter();
+    let inventory = loadInventory(activeClass);
 
     function clearInventory() {
       inventory = emptyInventory();
-      saveInventory(inventory);
+      saveInventory(inventory, activeClass);
       renderInventory();
       renderBuilds();
     }
 
-    // ---- Build the item catalog (by slot) from the *filtered* builds ----
+    // ---- Build the item catalog (by slot) from the selected class builds ----
     function buildItemCatalog(filteredBuilds) {
       const bySlot = {};
       for (const slot of slots) bySlot[slot] = [];
@@ -579,9 +577,6 @@
 
     // ---- Scoring ----
     function buildScore(build) {
-      const missing = [];
-      const substitutes = [];
-
       let requiredCount = 0;
       let optimalOwned = 0;
       let playable = true;
@@ -598,20 +593,13 @@
 
         const alts = (build.alternatives && build.alternatives[slot]) ? build.alternatives[slot] : [];
         const ownedAlt = alts.find(a => inventory[slot].has(a));
-
-        if (ownedAlt) {
-          substitutes.push(`${titleCase(slot)} → ${ownedAlt} (missing ${required})`);
-        } else {
-          playable = false;
-          missing.push(`${titleCase(slot)}: ${required}`);
-        }
+        if (!ownedAlt) playable = false;
       }
 
       const optimalPct = requiredCount ? Math.round((optimalOwned / requiredCount) * 100) : 0;
-      return { requiredCount, optimalOwned, optimalPct, playable, missing, substitutes };
+      return { requiredCount, optimalOwned, optimalPct, playable };
     }
 
-    // Full per-slot breakdown for a build
     function buildGearBreakdown(build) {
       const rows = [];
       for (const slot of slots) {
@@ -626,8 +614,7 @@
           slot,
           required: req,
           status: hasReq ? "owned" : (ownedAlt ? "sub" : "missing"),
-          substitute: ownedAlt || "",
-          alternatives: alts
+          substitute: ownedAlt || ""
         });
       }
       return rows;
@@ -643,9 +630,7 @@
       html += `<span class="small">(opens in new tab)</span>`;
       html += `</div>`;
 
-      html += `<div style="margin-top:10px;">`;
-      html += `<ul>`;
-
+      html += `<div style="margin-top:10px;"><ul>`;
       for (const r of rows) {
         if (r.status === "owned") {
           html += `<li><span class="ok">✓</span> <b>${escapeHtml(titleCase(r.slot))}</b>: ${escapeHtml(r.required)}</li>`;
@@ -655,11 +640,7 @@
           html += `<li><span class="bad">✗</span> <b>${escapeHtml(titleCase(r.slot))}</b>: ${escapeHtml(r.required)}</li>`;
         }
       }
-
-      html += `</ul>`;
-      html += `</div>`;
-      html += `</details>`;
-
+      html += `</ul></div></details>`;
       return html;
     }
 
@@ -669,18 +650,16 @@
       const sortByOptimal = document.getElementById("sortByOptimal").checked;
 
       const filteredBuilds = getFilteredBuilds();
+      if (!filteredBuilds.length) {
+        out.innerHTML = `<div class="hint">No ${escapeHtml(getClassFilter())} builds added yet.</div>`;
+        return;
+      }
 
       let rows = filteredBuilds.map(b => ({ b, s: buildScore(b) }));
       if (playableOnly) rows = rows.filter(r => r.s.playable);
       if (sortByOptimal) rows.sort((a, b) => b.s.optimalPct - a.s.optimalPct);
 
       out.innerHTML = "";
-
-      if (!rows.length) {
-        out.innerHTML = `<div class="hint">No builds match your current inventory.</div>`;
-        return;
-      }
-
       for (const { b, s } of rows) {
         const div = document.createElement("div");
         div.className = "build";
@@ -701,12 +680,16 @@
       }
     }
 
-    // ---- Inventory UI (checkbox database) ----
     function renderInventory() {
       const grid = document.getElementById("invGrid");
       grid.innerHTML = "";
 
       const filteredBuilds = getFilteredBuilds();
+      if (!filteredBuilds.length) {
+        grid.innerHTML = `<div class="hint">No ${escapeHtml(getClassFilter())} items yet (add builds for this class to populate the item list).</div>`;
+        return;
+      }
+
       const catalog = buildItemCatalog(filteredBuilds);
 
       for (const slot of slots) {
@@ -719,7 +702,7 @@
         let html = `<label>${titleCase(slot)} <span class="small">(${countOwned} owned)</span></label>`;
 
         if (!items.length) {
-          html += `<div class="hint">No items loaded for this slot for the selected class.</div>`;
+          html += `<div class="hint">No items loaded for this slot for ${escapeHtml(getClassFilter())}.</div>`;
           wrap.innerHTML = html;
           grid.appendChild(wrap);
           continue;
@@ -742,7 +725,6 @@
         grid.appendChild(wrap);
       }
 
-      // Wire checkbox events
       grid.querySelectorAll("input[type=checkbox]").forEach(cb => {
         cb.addEventListener("change", (e) => {
           const slot = e.target.getAttribute("data-slot");
@@ -752,37 +734,34 @@
           if (e.target.checked) inventory[slot].add(item);
           else inventory[slot].delete(item);
 
-          saveInventory(inventory);
+          saveInventory(inventory, activeClass);
           renderBuilds();
           renderInventory();
         });
       });
     }
 
-    // ---- Wire up controls ----
+    // Controls
     document.getElementById("clearBtn").addEventListener("click", () => {
-      if (confirm("Clear your saved inventory?")) clearInventory();
+      if (confirm(`Clear your saved ${activeClass} inventory?`)) clearInventory();
     });
 
     document.getElementById("saveBtn").addEventListener("click", () => {
-      saveInventory(inventory);
+      saveInventory(inventory, activeClass);
       renderBuilds();
     });
 
-    document.getElementById("showPlayableOnly").addEventListener("change", () => {
-      renderBuilds();
-      renderInventory();
-    });
-
+    document.getElementById("showPlayableOnly").addEventListener("change", renderBuilds);
     document.getElementById("sortByOptimal").addEventListener("change", renderBuilds);
 
-    const classFilterEl = document.getElementById("classFilter");
-    if (classFilterEl) {
-      classFilterEl.addEventListener("change", () => {
-        renderInventory();
-        renderBuilds();
-      });
-    }
+    document.getElementById("classFilter").addEventListener("change", () => {
+      // Save current class inventory, switch contexts, then load the other class inventory
+      saveInventory(inventory, activeClass);
+      activeClass = getClassFilter();
+      inventory = loadInventory(activeClass);
+      renderInventory();
+      renderBuilds();
+    });
 
     // Init
     renderInventory();
