@@ -55,7 +55,7 @@
 <body>
   <div class="container">
     <div class="topbar">
-      <h1>Lootborn Build Tracker v1.7</h1>
+      <h1>Lootborn Build Tracker v1.8</h1>
       <div class="small">Saves in your browser (no login). Inventory is separated by slot.</div>
     </div>
 
@@ -88,13 +88,15 @@
 
   <script>
   // Version marker: bump this each revision so you can confirm the live site updated.
-  const VERSION = "1.7";
+  const VERSION = "1.8";
 
   window.addEventListener("DOMContentLoaded", () => {
     const slots = [
       "weapon","helmet","cuirass","belt","greaves","pauldron",
       "bracers","gauntlet","boots","necklace","amulet","ring"
     ];
+
+    const WIKI_BASE = "https://lootbornwarriors.miraheze.org/wiki/";
 
     // Builds: add more objects here as you paste them in.
     const builds = [
@@ -145,8 +147,7 @@
         alternatives: {
           amulet: ["Overflow Amulet"]
         }
-      }
-    ,
+      },
       {
         class: "Arcanist",
         coreSkill: "Fireball",
@@ -219,8 +220,7 @@
           gauntlet: ["Firm Grip"],
           amulet: ["Threshold Mark"]
         }
-      }
-    ,
+      },
       {
         class: "Arcanist",
         coreSkill: "Fireball",
@@ -368,8 +368,7 @@
           ring: ["Hiss"],
           cuirass: ["Fel Heritage Robe"]
         }
-      }
-      ,
+      },
       {
         class: "Arcanist",
         coreSkill: "Ice Ray",
@@ -466,6 +465,18 @@
 
     const STORAGE_KEY = "lootborn_inventory_checkboxes_v1";
 
+    // --- Inject class filter UI (no HTML rewrite required) ---
+    const toggleRow = document.querySelector("#buildResults")?.previousElementSibling;
+    if (toggleRow && toggleRow.classList.contains("toggle-row")) {
+      const wrap = document.createElement("label");
+      wrap.innerHTML = `Class <select id="classFilter" style="margin-left:6px; background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 8px; padding: 6px 8px;">
+        <option value="all">All</option>
+        <option value="Arcanist">Arcanist</option>
+        <option value="Savage">Savage</option>
+      </select>`;
+      toggleRow.appendChild(wrap);
+    }
+
     function titleCase(s) {
       if (!s) return "";
       return s.charAt(0).toUpperCase() + s.slice(1);
@@ -480,40 +491,21 @@
         .replaceAll("'", "&#039;");
     }
 
-    // ---- Build the item catalog (by slot) from the builds ----
-    function buildItemCatalog() {
-      const bySlot = {};
-      for (const slot of slots) bySlot[slot] = [];
-
-      for (const b of builds) {
-        for (const slot of slots) {
-          const req = b.gear && b.gear[slot];
-          if (req) bySlot[slot].push(req);
-          const alts = (b.alternatives && b.alternatives[slot]) ? b.alternatives[slot] : [];
-          for (const a of alts) bySlot[slot].push(a);
-        }
-      }
-
-      // unique + sort
-      const uniqSorted = {};
-      for (const slot of slots) {
-        const seen = new Set();
-        const out = [];
-        for (const it of bySlot[slot]) {
-          const item = String(it || "").trim();
-          if (!item) continue;
-          if (seen.has(item)) continue;
-          seen.add(item);
-          out.push(item);
-        }
-        out.sort((a, b) => a.localeCompare(b));
-        uniqSorted[slot] = out;
-      }
-
-      return uniqSorted;
+    function wikiUrlForBuild(buildName) {
+      const slug = String(buildName || "").trim().split(" ").filter(Boolean).join("_");
+      return WIKI_BASE + encodeURIComponent(slug);
     }
 
-    const catalog = buildItemCatalog();
+    function getClassFilter() {
+      const el = document.getElementById("classFilter");
+      return el ? el.value : "all";
+    }
+
+    function getFilteredBuilds() {
+      const cf = getClassFilter();
+      if (cf === "all") return builds;
+      return builds.filter(b => b.class === cf);
+    }
 
     // ---- Inventory state (by slot: Set of owned items) ----
     function emptyInventory() {
@@ -534,9 +526,7 @@
             for (const it of arr) inv[slot].add(String(it).trim());
           }
         }
-      } catch (e) {
-        // ignore
-      }
+      } catch (e) {}
       return inv;
     }
 
@@ -553,6 +543,38 @@
       saveInventory(inventory);
       renderInventory();
       renderBuilds();
+    }
+
+    // ---- Build the item catalog (by slot) from the *filtered* builds ----
+    function buildItemCatalog(filteredBuilds) {
+      const bySlot = {};
+      for (const slot of slots) bySlot[slot] = [];
+
+      for (const b of filteredBuilds) {
+        for (const slot of slots) {
+          const req = b.gear && b.gear[slot];
+          if (req) bySlot[slot].push(req);
+          const alts = (b.alternatives && b.alternatives[slot]) ? b.alternatives[slot] : [];
+          for (const a of alts) bySlot[slot].push(a);
+        }
+      }
+
+      const uniqSorted = {};
+      for (const slot of slots) {
+        const seen = new Set();
+        const out = [];
+        for (const it of bySlot[slot]) {
+          const item = String(it || "").trim();
+          if (!item) continue;
+          if (seen.has(item)) continue;
+          seen.add(item);
+          out.push(item);
+        }
+        out.sort((a, b) => a.localeCompare(b));
+        uniqSorted[slot] = out;
+      }
+
+      return uniqSorted;
     }
 
     // ---- Scoring ----
@@ -589,22 +611,55 @@
       return { requiredCount, optimalOwned, optimalPct, playable, missing, substitutes };
     }
 
-    function buildDetailsHtml(score) {
-      let html = `<details><summary>Details</summary>`;
+    // Full per-slot breakdown for a build
+    function buildGearBreakdown(build) {
+      const rows = [];
+      for (const slot of slots) {
+        const req = build.gear && build.gear[slot];
+        if (!req) continue;
 
-      if (score.missing.length) {
-        html += `<div style="margin-top:8px;"><span class="bad">Missing</span><ul>`;
-        for (const m of score.missing) html += `<li>${escapeHtml(m)}</li>`;
-        html += `</ul></div>`;
+        const hasReq = inventory[slot].has(req);
+        const alts = (build.alternatives && build.alternatives[slot]) ? build.alternatives[slot] : [];
+        const ownedAlt = alts.find(a => inventory[slot].has(a));
+
+        rows.push({
+          slot,
+          required: req,
+          status: hasReq ? "owned" : (ownedAlt ? "sub" : "missing"),
+          substitute: ownedAlt || "",
+          alternatives: alts
+        });
+      }
+      return rows;
+    }
+
+    function gearDetailsHtml(build) {
+      const rows = buildGearBreakdown(build);
+      const wiki = wikiUrlForBuild(build.build);
+
+      let html = `<details><summary>Build details</summary>`;
+      html += `<div style="margin-top:8px; display:flex; gap:10px; flex-wrap:wrap; align-items:center;">`;
+      html += `<a href="${escapeHtml(wiki)}" target="_blank" rel="noopener" style="color: var(--warn); text-decoration: none; font-weight: 800;">Open wiki page</a>`;
+      html += `<span class="small">(opens in new tab)</span>`;
+      html += `</div>`;
+
+      html += `<div style="margin-top:10px;">`;
+      html += `<ul>`;
+
+      for (const r of rows) {
+        if (r.status === "owned") {
+          html += `<li><span class="ok">✓</span> <b>${escapeHtml(titleCase(r.slot))}</b>: ${escapeHtml(r.required)}</li>`;
+        } else if (r.status === "sub") {
+          html += `<li><span class="warn">~</span> <b>${escapeHtml(titleCase(r.slot))}</b>: missing ${escapeHtml(r.required)} — using ${escapeHtml(r.substitute)}</li>`;
+        } else {
+          html += `<li><span class="bad">✗</span> <b>${escapeHtml(titleCase(r.slot))}</b>: ${escapeHtml(r.required)}</li>`;
+        }
       }
 
-      if (score.substitutes.length) {
-        html += `<div style="margin-top:8px;"><span class="warn">Substitutes</span><ul>`;
-        for (const s of score.substitutes) html += `<li>${escapeHtml(s)}</li>`;
-        html += `</ul></div>`;
-      }
-
+      html += `</ul>`;
+      html += `</div>`;
       html += `</details>`;
+
       return html;
     }
 
@@ -613,7 +668,9 @@
       const playableOnly = document.getElementById("showPlayableOnly").checked;
       const sortByOptimal = document.getElementById("sortByOptimal").checked;
 
-      let rows = builds.map(b => ({ b, s: buildScore(b) }));
+      const filteredBuilds = getFilteredBuilds();
+
+      let rows = filteredBuilds.map(b => ({ b, s: buildScore(b) }));
       if (playableOnly) rows = rows.filter(r => r.s.playable);
       if (sortByOptimal) rows.sort((a, b) => b.s.optimalPct - a.s.optimalPct);
 
@@ -632,14 +689,12 @@
           ? `<span class="ok">Playable</span>`
           : `<span class="bad">Not playable</span>`;
 
-        const detailsNeeded = s.missing.length || s.substitutes.length;
-
         div.innerHTML = `
           <h3>${escapeHtml(b.build)} – ${escapeHtml(b.variant)}</h3>
           <div class="meta">${escapeHtml(b.class)} • ${escapeHtml(b.coreSkill)} • ${s.optimalOwned}/${s.requiredCount} optimal</div>
           <div class="progress">Optimal: ${s.optimalPct}%</div>
           <div style="margin-top:6px;">${playableLabel}</div>
-          ${detailsNeeded ? buildDetailsHtml(s) : ""}
+          ${gearDetailsHtml(b)}
         `;
 
         out.appendChild(div);
@@ -651,6 +706,9 @@
       const grid = document.getElementById("invGrid");
       grid.innerHTML = "";
 
+      const filteredBuilds = getFilteredBuilds();
+      const catalog = buildItemCatalog(filteredBuilds);
+
       for (const slot of slots) {
         const wrap = document.createElement("div");
         wrap.className = "slot";
@@ -661,7 +719,7 @@
         let html = `<label>${titleCase(slot)} <span class="small">(${countOwned} owned)</span></label>`;
 
         if (!items.length) {
-          html += `<div class="hint">No items loaded for this slot yet.</div>`;
+          html += `<div class="hint">No items loaded for this slot for the selected class.</div>`;
           wrap.innerHTML = html;
           grid.appendChild(wrap);
           continue;
@@ -695,9 +753,7 @@
           else inventory[slot].delete(item);
 
           saveInventory(inventory);
-          // update counts and build results
           renderBuilds();
-          // lightweight count refresh: rerender only this slot header would be nicer, but keep simple
           renderInventory();
         });
       });
@@ -713,8 +769,20 @@
       renderBuilds();
     });
 
-    document.getElementById("showPlayableOnly").addEventListener("change", renderBuilds);
+    document.getElementById("showPlayableOnly").addEventListener("change", () => {
+      renderBuilds();
+      renderInventory();
+    });
+
     document.getElementById("sortByOptimal").addEventListener("change", renderBuilds);
+
+    const classFilterEl = document.getElementById("classFilter");
+    if (classFilterEl) {
+      classFilterEl.addEventListener("change", () => {
+        renderInventory();
+        renderBuilds();
+      });
+    }
 
     // Init
     renderInventory();
