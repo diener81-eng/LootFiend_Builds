@@ -44,6 +44,12 @@
     .class-btn.active{background:var(--btnActive);border-color:rgba(255,255,255,0.20);}
 
     .toggle-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:10px;}
+
+    .class-switch{display:flex;gap:10px;align-items:center;justify-content:flex-end;flex-wrap:wrap;}
+    .pill{cursor:pointer;background:#222738;color:var(--text);border:1px solid rgba(255,255,255,0.10);border-radius:999px;padding:10px 14px;font-weight:900;}
+    .pill:hover{filter:brightness(1.08);} 
+    .pill:active{transform:translateY(1px);} 
+    .pill.active{outline:2px solid rgba(255,255,255,0.25);filter:brightness(1.12);}
     .toggle-row label{display:inline-flex;gap:8px;align-items:center;color:var(--muted);font-size:0.92em;user-select:none;}
 
     .build{background:rgba(0,0,0,0.20);border:1px solid rgba(255,255,255,0.08);padding:14px;border-radius:12px;margin-bottom:12px;}
@@ -69,10 +75,9 @@
         <h1>Lootborn Build Tracker v3.6</h1>
         <div class="small">Saves in your browser (no login). Arcanist and Savage are stored separately because their stash items are different.</div>
       </div>
-
-      <div class="class-switch" aria-label="Class switch">
-        <button id="btnArcanist" class="class-btn" type="button">Arcanist Builds</button>
-        <button id="btnSavage" class="class-btn" type="button">Savage Builds</button>
+      <div class="class-switch" role="group" aria-label="Class switch">
+        <button id="btnArcanist" type="button" class="pill active">Arcanist Builds</button>
+        <button id="btnSavage" type="button" class="pill">Savage Builds</button>
       </div>
     </div>
 
