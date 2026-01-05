@@ -87,6 +87,7 @@
   </div>
 
   <script>
+window.addEventListener('DOMContentLoaded', () => {
     const slots = [
       'weapon','helmet','cuirass','belt','greaves','pauldron',
       'bracers','gauntlet','boots','necklace','amulet','ring'
@@ -357,6 +358,7 @@
     for (const s of slots) inventoryText[s] = loaded[s];
     createInventoryUI();
     renderBuilds();
-  </script>
+});
+</script>
 </body>
 </html>
