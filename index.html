@@ -61,6 +61,11 @@
     .bad{color:var(--bad);font-weight:900;}
     .warn{color:var(--warn);font-weight:900;}
 
+/* "Incomplete" label: different red, not bold */
+.incomplete{
+  color:#e32727;   
+  font-weight:400; 
+}
     details{margin-top:10px;}
     summary{cursor:pointer;color:var(--muted);}
     ul{margin:8px 0 0 18px;padding:0;}
@@ -1180,7 +1185,7 @@
           const s = row.s;
 
           const playableLabel = (() => {
-            if (!s.playable) return '<span class="bad">Not playable</span>';
+            if (!s.playable) return '<span class="incomplete">Incomplete</span>';
             if (s.optimalPct === 100) return '<span class="ok">Playable (optimal)</span>';
             return '<span class="warn">Playable (using substitutes)</span>';
           })();
