@@ -66,6 +66,11 @@
   color:#e32727;   
   font-weight:400; 
 }
+.ag-warning{
+  color:#ff4d4d;
+  font-size:0.9em;
+  margin-top:4px;
+}
     details{margin-top:10px;}
     summary{cursor:pointer;color:var(--muted);}
     ul{margin:8px 0 0 18px;padding:0;}
@@ -389,7 +394,7 @@
           class: "Arcanist",
           coreSkill: "Fireball",
           build: "Jolt",
-          variant: "PvE Ancient God",
+          variant: "Ancient God PvE",
           gear: {
             weapon: "Ancient God's Call",
             helmet: "Dragon Claw Visage",
@@ -1189,15 +1194,23 @@
             if (s.optimalPct === 100) return '<span class="ok">Playable (optimal)</span>';
             return '<span class="warn">Playable (using substitutes)</span>';
           })();
+	  const isAncientGod = String(b.variant || "").includes("Ancient God");
+
 
           const div = document.createElement("div");
           div.className = "build";
-          div.innerHTML =
-            '<h3>' + escapeHtml(b.build) + ' – ' + escapeHtml(b.variant) + '</h3>' +
-            '<div class="meta">' + escapeHtml(b.class) + ' • ' + escapeHtml(b.coreSkill) + ' • ' + s.optimalOwned + '/' + s.requiredCount + ' optimal</div>' +
-            '<div class="progress">Optimal: ' + s.optimalPct + '%</div>' +
-            '<div style="margin-top:6px;">' + playableLabel + '</div>' +
-            gearDetailsHtml(b);
+div.innerHTML =
+  '<h3>' + escapeHtml(b.build) + ' – ' + escapeHtml(b.variant) + '</h3>' +
+  (isAncientGod
+    ? '<div class="ag-warning">Warning: This build requires 15% or more Hail CD</div>'
+    : ''
+  ) +
+  '<div class="meta">' + escapeHtml(b.class) + ' • ' + escapeHtml(b.coreSkill) + ' • ' +
+    s.optimalOwned + '/' + s.requiredCount + ' optimal</div>' +
+  '<div class="progress">Optimal: ' + s.optimalPct + '%</div>' +
+  '<div style="margin-top:6px;">' + playableLabel + '</div>' +
+  gearDetailsHtml(b);
+
 
           out.appendChild(div);
         }
