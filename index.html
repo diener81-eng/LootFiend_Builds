@@ -6,14 +6,8 @@
   <title>Lootborn Build Tracker</title>
   <style>
     :root{
-      --bg:#0f1115;
-      --panel:#1a1d24;
-      --text:#e6e6e6;
-      --muted:#b5b5b5;
-      --border:#333;
-      --ok:#7CFC98;
-      --bad:#ff7a7a;
-      --warn:#ffd27a;
+      --bg:#0f1115; --panel:#1a1d24; --text:#e6e6e6; --muted:#b5b5b5; --border:#333;
+      --ok:#7CFC98; --bad:#ff7a7a; --warn:#ffd27a;
     }
     body{font-family:system-ui,-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg);color:var(--text);margin:0;padding:20px;}
     h1,h2,h3{margin:0 0 10px;}
@@ -30,11 +24,16 @@
     .inv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-top:10px;}
     .slot{background:rgba(0,0,0,0.20);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:10px;}
     .slot label{display:block;font-weight:700;margin-bottom:6px;}
-    textarea{width:100%;box-sizing:border-box;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:10px;padding:10px;min-height:88px;resize:vertical;outline:none;}
+
+    textarea{
+      width:100%;box-sizing:border-box;background:var(--bg);color:var(--text);
+      border:1px solid var(--border);border-radius:10px;padding:10px;
+      min-height:88px;resize:vertical;outline:none;
+    }
 
     button{cursor:pointer;background:#222738;color:var(--text);border:1px solid rgba(255,255,255,0.10);border-radius:10px;padding:10px 12px;font-weight:700;}
-    button:hover{filter:brightness(1.08);} 
-    button:active{transform:translateY(1px);} 
+    button:hover{filter:brightness(1.08);}
+    button:active{transform:translateY(1px);}
     .btn-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;}
 
     .toggle-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:10px;}
@@ -68,8 +67,8 @@
         </div>
 
         <div class="btn-row">
-          <button id="saveBtn">Save now</button>
-          <button id="clearBtn" title="Clears all saved inventory">Clear inventory</button>
+          <button id="saveBtn" type="button">Save now</button>
+          <button id="clearBtn" type="button" title="Clears all saved inventory">Clear inventory</button>
         </div>
 
         <div class="inv-grid" id="invGrid"></div>
@@ -87,278 +86,286 @@
   </div>
 
   <script>
-window.addEventListener('DOMContentLoaded', () => {
-    const slots = [
-      'weapon','helmet','cuirass','belt','greaves','pauldron',
-      'bracers','gauntlet','boots','necklace','amulet','ring'
-    ];
+    // Run only after the page has loaded
+    window.addEventListener('DOMContentLoaded', function () {
 
-    // Builds: add more objects here as you paste them in.
-    const builds = [
-      {
-        class: 'Arcanist',
-        coreSkill: 'Fireball',
-        build: 'Iceflame',
-        variant: 'PvE',
-        gear: {
-          weapon: 'Fate Intertwined',
-          helmet: 'Evil Spirit Skull',
-          cuirass: 'Void Cavity',
-          belt: 'Resurrection',
-          greaves: 'Void Hip',
-          pauldron: 'Fairy Whisper',
-          bracers: 'Dragon Roar Mark',
-          gauntlet: 'Void Arm',
-          boots: 'Void Shin',
-          necklace: 'Balance Chain',
-          amulet: "End's Return",
-          ring: 'Swift Shadow Finger'
-        },
-        alternatives: {
-          boots: ['Planar Shortcut'],
-          amulet: ['Overflow Amulet'],
-          belt: ['Viper Bond']
+      var slots = [
+        'weapon','helmet','cuirass','belt','greaves','pauldron',
+        'bracers','gauntlet','boots','necklace','amulet','ring'
+      ];
+
+      // Builds (start with Iceflame PvE)
+      var builds = [
+        {
+          class: 'Arcanist',
+          coreSkill: 'Fireball',
+          build: 'Iceflame',
+          variant: 'PvE',
+          gear: {
+            weapon: 'Fate Intertwined',
+            helmet: 'Evil Spirit Skull',
+            cuirass: 'Void Cavity',
+            belt: 'Resurrection',
+            greaves: 'Void Hip',
+            pauldron: 'Fairy Whisper',
+            bracers: 'Dragon Roar Mark',
+            gauntlet: 'Void Arm',
+            boots: 'Void Shin',
+            necklace: 'Balance Chain',
+            amulet: "End's Return",
+            ring: 'Swift Shadow Finger'
+          },
+          alternatives: {
+            boots: ['Planar Shortcut'],
+            amulet: ['Overflow Amulet'],
+            belt: ['Viper Bond']
+          }
         }
+      ];
+
+      var STORAGE_KEY = 'lootborn_inventory_by_slot_v1';
+
+      function makeEmptyInventory(){
+        var obj = {};
+        for (var i=0;i<slots.length;i++) obj[slots[i]] = '';
+        return obj;
       }
-    ];
 
-    const STORAGE_KEY = 'lootborn_inventory_by_slot_v1';
+      function normalizeSpaces(s){
+        return String(s || '').trim().replace(/\s+/g,' ');
+      }
 
-    // inventoryText[slot] = raw textarea string
-    const inventoryText = {};
-
-    function makeEmptyInventory(){
-      const obj = {};
-      for (const s of slots) obj[s] = '';
-      return obj;
-    }
-
-    function normalizeSpaces(s){
-      let t = (s || '').trim();
-      while (t.indexOf('  ') !== -1) t = t.replace('  ',' ');
-      return t;
-    }
-
-    function parseSlotItems(text){
-      const clean = (text || '').split('
-').join('');
-      const lines = clean.split('
-');
-      const out = [];
-      for (const line of lines){
-        const parts = line.split(',');
-        for (const p of parts){
-          const item = normalizeSpaces(p);
-          if (item) out.push(item);
+      function parseSlotItems(text){
+        var clean = String(text || '').replace(/\r/g,'');
+        var lines = clean.split('\n');
+        var out = [];
+        for (var i=0;i<lines.length;i++){
+          var parts = lines[i].split(',');
+          for (var j=0;j<parts.length;j++){
+            var item = normalizeSpaces(parts[j]);
+            if (item) out.push(item);
+          }
         }
-      }
-      // unique
-      const seen = {};
-      const uniq = [];
-      for (const it of out){
-        if (!seen[it]){ seen[it] = true; uniq.push(it); }
-      }
-      return uniq;
-    }
-
-    function inventorySets(){
-      const sets = {};
-      for (const s of slots){
-        const items = parseSlotItems(inventoryText[s]);
-        const map = {};
-        for (const it of items) map[it] = true;
-        sets[s] = map;
-      }
-      return sets;
-    }
-
-    function loadInventory(){
-      try{
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if (!raw) return makeEmptyInventory();
-        const obj = JSON.parse(raw);
-        const out = makeEmptyInventory();
-        for (const s of slots){
-          if (typeof obj[s] === 'string') out[s] = obj[s];
+        // unique
+        var seen = {};
+        var uniq = [];
+        for (var k=0;k<out.length;k++){
+          var it = out[k];
+          if (!seen[it]) { seen[it]=true; uniq.push(it); }
         }
-        return out;
-      }catch(e){
-        return makeEmptyInventory();
+        return uniq;
       }
-    }
 
-    function saveInventory(){
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(inventoryText));
-      renderBuilds();
-    }
-
-    function clearInventory(){
-      const empty = makeEmptyInventory();
-      for (const s of slots) inventoryText[s] = empty[s];
-      for (const s of slots){
-        const ta = document.getElementById('inv_' + s);
-        if (ta) ta.value = '';
+      function inventorySets(invText){
+        var sets = {};
+        for (var i=0;i<slots.length;i++){
+          var s = slots[i];
+          var items = parseSlotItems(invText[s]);
+          var map = {};
+          for (var j=0;j<items.length;j++) map[items[j]] = true;
+          sets[s] = map;
+        }
+        return sets;
       }
-      saveInventory();
-    }
 
-    function titleCase(s){
-      if (!s) return '';
-      return s.charAt(0).toUpperCase() + s.slice(1);
-    }
-
-    function escapeHtml(str){
-      return String(str)
-        .split('&').join('&amp;')
-        .split('<').join('&lt;')
-        .split('>').join('&gt;')
-        .split('"').join('&quot;')
-        .split("'").join('&#039;');
-    }
-
-    function buildScore(build, invSets){
-      const missing = [];
-      const substitutes = [];
-      let requiredCount = 0;
-      let optimalOwned = 0;
-      let playable = true;
-
-      for (const slot of slots){
-        const required = build.gear && build.gear[slot];
-        if (!required) continue;
-        requiredCount++;
-
-        if (invSets[slot] && invSets[slot][required]){
-          optimalOwned++;
-          continue;
-        }
-
-        const alts = (build.alternatives && build.alternatives[slot]) ? build.alternatives[slot] : [];
-        let ownedAlt = '';
-        for (const a of alts){
-          if (invSets[slot] && invSets[slot][a]){ ownedAlt = a; break; }
-        }
-
-        if (ownedAlt){
-          substitutes.push(titleCase(slot) + ' -> ' + ownedAlt + ' (missing ' + required + ')');
-        } else {
-          playable = false;
-          missing.push(titleCase(slot) + ': ' + required);
+      function loadInventory(){
+        try{
+          var raw = localStorage.getItem(STORAGE_KEY);
+          if (!raw) return makeEmptyInventory();
+          var obj = JSON.parse(raw);
+          var out = makeEmptyInventory();
+          for (var i=0;i<slots.length;i++){
+            var s = slots[i];
+            if (typeof obj[s] === 'string') out[s] = obj[s];
+          }
+          return out;
+        }catch(e){
+          return makeEmptyInventory();
         }
       }
 
-      const optimalPct = requiredCount ? Math.round((optimalOwned / requiredCount) * 100) : 0;
-      return { requiredCount, optimalOwned, optimalPct, playable, missing, substitutes };
-    }
-
-    function renderBuilds(){
-      const out = document.getElementById('buildResults');
-      const playableOnly = document.getElementById('showPlayableOnly').checked;
-      const sortByOptimal = document.getElementById('sortByOptimal').checked;
-
-      const invSets = inventorySets();
-      const rows = builds.map(b => ({ b: b, s: buildScore(b, invSets) }));
-      const filtered = playableOnly ? rows.filter(r => r.s.playable) : rows;
-
-      if (sortByOptimal){
-        filtered.sort((a,b) => b.s.optimalPct - a.s.optimalPct);
+      function saveInventory(invText){
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(invText));
       }
 
-      out.innerHTML = '';
-
-      if (!filtered.length){
-        out.innerHTML = '<div class="hint">No builds match your current inventory.</div>';
-        return;
+      function titleCase(s){
+        return s ? s.charAt(0).toUpperCase() + s.slice(1) : '';
       }
 
-      for (const row of filtered){
-        const b = row.b;
-        const s = row.s;
-
-        const playableLabel = s.playable ? '<span class="ok">Playable</span>' : '<span class="bad">Not playable</span>';
-
-        const div = document.createElement('div');
-        div.className = 'build';
-
-        const detailsNeeded = (s.missing.length > 0) || (s.substitutes.length > 0);
-
-        div.innerHTML =
-          '<h3>' + escapeHtml(b.build) + ' – ' + escapeHtml(b.variant) + '</h3>' +
-          '<div class="meta">' + escapeHtml(b.class) + ' • ' + escapeHtml(b.coreSkill) + ' • ' + s.optimalOwned + '/' + s.requiredCount + ' optimal</div>' +
-          '<div class="progress">Optimal: ' + s.optimalPct + '%</div>' +
-          '<div style="margin-top:6px;">' + playableLabel + '</div>' +
-          (detailsNeeded ? buildDetailsHtml(s) : '');
-
-        out.appendChild(div);
-      }
-    }
-
-    function buildDetailsHtml(score){
-      let html = '<details><summary>Details</summary>';
-
-      if (score.missing.length){
-        html += '<div style="margin-top:8px;"><span class="bad">Missing</span><ul>';
-        for (const m of score.missing){ html += '<li>' + escapeHtml(m) + '</li>'; }
-        html += '</ul></div>';
+      function escapeHtml(str){
+        return String(str)
+          .replace(/&/g,'&amp;')
+          .replace(/</g,'&lt;')
+          .replace(/>/g,'&gt;')
+          .replace(/"/g,'&quot;')
+          .replace(/'/g,'&#039;');
       }
 
-      if (score.substitutes.length){
-        html += '<div style="margin-top:8px;"><span class="warn">Substitutes</span><ul>';
-        for (const sub of score.substitutes){ html += '<li>' + escapeHtml(sub) + '</li>'; }
-        html += '</ul></div>';
+      function buildScore(build, invSets){
+        var missing = [];
+        var substitutes = [];
+        var requiredCount = 0;
+        var optimalOwned = 0;
+        var playable = true;
+
+        for (var i=0;i<slots.length;i++){
+          var slot = slots[i];
+          var required = build.gear && build.gear[slot];
+          if (!required) continue;
+          requiredCount++;
+
+          if (invSets[slot] && invSets[slot][required]){
+            optimalOwned++;
+            continue;
+          }
+
+          var alts = (build.alternatives && build.alternatives[slot]) ? build.alternatives[slot] : [];
+          var ownedAlt = '';
+          for (var j=0;j<alts.length;j++){
+            var a = alts[j];
+            if (invSets[slot] && invSets[slot][a]) { ownedAlt = a; break; }
+          }
+
+          if (ownedAlt){
+            substitutes.push(titleCase(slot) + ' -> ' + ownedAlt + ' (missing ' + required + ')');
+          } else {
+            playable = false;
+            missing.push(titleCase(slot) + ': ' + required);
+          }
+        }
+
+        var optimalPct = requiredCount ? Math.round((optimalOwned / requiredCount) * 100) : 0;
+        return { requiredCount:requiredCount, optimalOwned:optimalOwned, optimalPct:optimalPct, playable:playable, missing:missing, substitutes:substitutes };
       }
 
-      html += '</details>';
-      return html;
-    }
+      function buildDetailsHtml(score){
+        var html = '<details><summary>Details</summary>';
 
-    function createInventoryUI(){
-      const grid = document.getElementById('invGrid');
+        if (score.missing.length){
+          html += '<div style="margin-top:8px;"><span class="bad">Missing</span><ul>';
+          for (var i=0;i<score.missing.length;i++){
+            html += '<li>' + escapeHtml(score.missing[i]) + '</li>';
+          }
+          html += '</ul></div>';
+        }
+
+        if (score.substitutes.length){
+          html += '<div style="margin-top:8px;"><span class="warn">Substitutes</span><ul>';
+          for (var j=0;j<score.substitutes.length;j++){
+            html += '<li>' + escapeHtml(score.substitutes[j]) + '</li>';
+          }
+          html += '</ul></div>';
+        }
+
+        html += '</details>';
+        return html;
+      }
+
+      function renderBuilds(invText){
+        var out = document.getElementById('buildResults');
+        var playableOnly = document.getElementById('showPlayableOnly').checked;
+        var sortByOptimal = document.getElementById('sortByOptimal').checked;
+
+        var invSets = inventorySets(invText);
+
+        var rows = [];
+        for (var i=0;i<builds.length;i++){
+          var b = builds[i];
+          rows.push({ b:b, s: buildScore(b, invSets) });
+        }
+
+        if (playableOnly){
+          rows = rows.filter(function(r){ return r.s.playable; });
+        }
+
+        if (sortByOptimal){
+          rows.sort(function(a,b){ return b.s.optimalPct - a.s.optimalPct; });
+        }
+
+        out.innerHTML = '';
+        if (!rows.length){
+          out.innerHTML = '<div class="hint">No builds match your current inventory.</div>';
+          return;
+        }
+
+        for (var k=0;k<rows.length;k++){
+          var r = rows[k];
+          var bld = r.b;
+          var s = r.s;
+
+          var playableLabel = s.playable ? '<span class="ok">Playable</span>' : '<span class="bad">Not playable</span>';
+
+          var div = document.createElement('div');
+          div.className = 'build';
+          div.innerHTML =
+            '<h3>' + escapeHtml(bld.build) + ' – ' + escapeHtml(bld.variant) + '</h3>' +
+            '<div class="meta">' + escapeHtml(bld.class) + ' • ' + escapeHtml(bld.coreSkill) + ' • ' + s.optimalOwned + '/' + s.requiredCount + ' optimal</div>' +
+            '<div class="progress">Optimal: ' + s.optimalPct + '%</div>' +
+            '<div style="margin-top:6px;">' + playableLabel + '</div>' +
+            ((s.missing.length || s.substitutes.length) ? buildDetailsHtml(s) : '');
+
+          out.appendChild(div);
+        }
+      }
+
+      // ---- Build the inventory UI (12 slot textareas) ----
+      var invText = loadInventory();
+
+      var grid = document.getElementById('invGrid');
       grid.innerHTML = '';
 
-      for (const s of slots){
-        const div = document.createElement('div');
-        div.className = 'slot';
-        div.innerHTML =
+      for (var i=0;i<slots.length;i++){
+        var s = slots[i];
+        var wrap = document.createElement('div');
+        wrap.className = 'slot';
+
+        wrap.innerHTML =
           '<label for="inv_' + s + '">' + titleCase(s) + '</label>' +
           '<textarea id="inv_' + s + '" placeholder="One per line"></textarea>';
-        grid.appendChild(div);
+
+        grid.appendChild(wrap);
       }
 
-      for (const s of slots){
-        const ta = document.getElementById('inv_' + s);
-        ta.value = inventoryText[s] || '';
-        ta.addEventListener('input', () => {
-          inventoryText[s] = ta.value;
-          scheduleAutosave();
-        });
+      // Load saved inventory into boxes and listen for changes
+      function wireInventoryInputs(){
+        for (var i=0;i<slots.length;i++){
+          (function(slot){
+            var ta = document.getElementById('inv_' + slot);
+            ta.value = invText[slot] || '';
+            ta.addEventListener('input', function(){
+              invText[slot] = ta.value;
+              // autosave + rerender
+              saveInventory(invText);
+              renderBuilds(invText);
+            });
+          })(slots[i]);
+        }
       }
-    }
 
-    let autosaveTimer = null;
-    function scheduleAutosave(){
-      if (autosaveTimer) clearTimeout(autosaveTimer);
-      autosaveTimer = setTimeout(() => {
-        autosaveTimer = null;
-        saveInventory();
-      }, 500);
-    }
+      wireInventoryInputs();
+      renderBuilds(invText);
 
-    // --- Wire up ---
-    document.getElementById('saveBtn').addEventListener('click', saveInventory);
-    document.getElementById('clearBtn').addEventListener('click', () => {
-      if (confirm('Clear your saved inventory?')) clearInventory();
+      // Buttons / toggles
+      document.getElementById('saveBtn').addEventListener('click', function(){
+        saveInventory(invText);
+        renderBuilds(invText);
+      });
+
+      document.getElementById('clearBtn').addEventListener('click', function(){
+        if (!confirm('Clear your saved inventory?')) return;
+        invText = makeEmptyInventory();
+        saveInventory(invText);
+        for (var i=0;i<slots.length;i++){
+          var ta = document.getElementById('inv_' + slots[i]);
+          if (ta) ta.value = '';
+        }
+        renderBuilds(invText);
+      });
+
+      document.getElementById('showPlayableOnly').addEventListener('change', function(){ renderBuilds(invText); });
+      document.getElementById('sortByOptimal').addEventListener('change', function(){ renderBuilds(invText); });
+
     });
-
-    document.getElementById('showPlayableOnly').addEventListener('change', renderBuilds);
-    document.getElementById('sortByOptimal').addEventListener('change', renderBuilds);
-
-    // --- Init ---
-    const loaded = loadInventory();
-    for (const s of slots) inventoryText[s] = loaded[s];
-    createInventoryUI();
-    renderBuilds();
-});
-</script>
+  </script>
 </body>
 </html>
