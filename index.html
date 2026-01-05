@@ -20,8 +20,6 @@
     .container{max-width:1200px;margin:auto;}
     .topbar{display:flex;gap:12px;flex-wrap:wrap;align-items:baseline;justify-content:space-between;margin-bottom:12px;}
     .small{color:var(--muted);font-size:0.92em;}
-    .desc{margin:12px 0 14px; line-height:1.35; font-size:0.98em;}
-    .desc b{color:var(--warn);} 
 
     .row{display:grid;grid-template-columns:1.1fr 0.9fr;gap:14px;align-items:start;}
     @media (max-width: 980px){.row{grid-template-columns:1fr;}}
@@ -32,11 +30,10 @@
     .inv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-top:10px;}
     .slot{background:rgba(0,0,0,0.20);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:10px;}
     .slot label{display:block;font-weight:700;margin-bottom:6px;}
-    textarea{width:100%;box-sizing:border-box;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:10px;padding:10px;min-height:88px;resize:vertical;outline:none;}
 
     button{cursor:pointer;background:#222738;color:var(--text);border:1px solid rgba(255,255,255,0.10);border-radius:10px;padding:10px 12px;font-weight:700;}
-    button:hover{filter:brightness(1.08);} 
-    button:active{transform:translateY(1px);} 
+    button:hover{filter:brightness(1.08);}
+    button:active{transform:translateY(1px);}
     .btn-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;}
 
     .toggle-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:10px;}
@@ -57,11 +54,9 @@
 <body>
   <div class="container">
     <div class="topbar">
-      <h1>Lootborn Build Tracker v2.3</h1>
+      <h1>Lootborn Build Tracker v3.5</h1>
       <div class="small">Saves in your browser (no login). Arcanist and Savage inventories are stored separately, because their stash items are different.</div>
     </div>
-
-    
 
     <div class="row">
       <div class="card">
@@ -73,7 +68,7 @@
 
         <div class="btn-row">
           <button id="saveBtn">Save now</button>
-          <button id="clearBtn" title="Clears all saved inventory">Clear inventory</button>
+          <button id="clearBtn" title="Clears all saved inventory for the selected class">Clear inventory</button>
         </div>
 
         <div class="inv-grid" id="invGrid"></div>
@@ -97,389 +92,1086 @@
   </div>
 
   <script>
-  // Version marker: bump this each revision so you can confirm the live site updated.
-  const VERSION = "2.3";
+    // Version marker: bump this each revision so you can confirm the live site updated.
+    const VERSION = "3.5";
 
-  window.addEventListener("DOMContentLoaded", () => {
-    const slots = [
-      "weapon","helmet","cuirass","belt","greaves","pauldron",
-      "bracers","gauntlet","boots","necklace","amulet","ring"
-    ];
+    document.addEventListener("DOMContentLoaded", () => {
+      const slots = [
+        "weapon","helmet","cuirass","belt","greaves","pauldron",
+        "bracers","gauntlet","boots","necklace","amulet","ring"
+      ];
 
-    const WIKI_BASE = "https://lootbornwarriors.miraheze.org/wiki/";
+      const WIKI_BASE = "https://lootbornwarriors.miraheze.org/wiki/";
 
-    // --- Name normalization (aliases) ---
-    // Canonical spellings go on the RIGHT side.
-    const NAME_ALIASES = {
-      "ancient god call": "Ancient God's Call",
-      "ancient gods call": "Ancient God's Call",
-      "ancient god's call": "Ancient God's Call",
-      "pack binding": "Pact Binding",
-      "dragon hyun walker": "Dragon Hymn Walker"
-    };
+      // --- Name normalization (aliases) ---
+      // Canonical spellings go on the RIGHT side.
+      const NAME_ALIASES = {
+        "ancient god call": "Ancient God's Call",
+        "ancient gods call": "Ancient God's Call",
+        "ancient god's call": "Ancient God's Call",
+        "pack binding": "Pact Binding",
+        "dragon hyun walker": "Dragon Hymn Walker"
+      };
 
-    function collapseSpaces(s) {
-      let out = String(s || "");
-      while (out.includes("  ")) out = out.replaceAll("  ", " ");
-      return out;
-    }
-
-    function normalizeKey(s) {
-      return collapseSpaces(String(s || "").trim().replaceAll("’", "'")).toLowerCase();
-    }
-
-    function normalizeItemName(name) {
-      const raw = collapseSpaces(String(name || "").trim().replaceAll("’", "'"));
-      if (!raw) return "";
-      const key = normalizeKey(raw);
-      return NAME_ALIASES[key] || raw;
-    }
-
-    // --- Separate storage per class (Arcanist vs Savage) ---
-    const STORAGE_KEY_PREFIX = "lootborn_inventory_v3";
-    function storageKeyFor(cls) {
-      return STORAGE_KEY_PREFIX + "_" + String(cls || "").toLowerCase();
-    }
-
-    // Builds: add more objects here as you paste them in.
-    const builds = [
-      $&
-      ,{
-        class: "Savage",
-        coreSkill: "Bladestorm",
-        build: "Thunder",
-        variant: "PvE",
-        gear: {
-          weapon: "Tribal Reverence",
-          helmet: "Crown of Madness",
-          cuirass: "Desolate Cuirass",
-          belt: "Desolate Belt",
-          greaves: "Desolate Greaves",
-          pauldron: "Demonbane Pauldron",
-          bracers: "Might of Fury",
-          gauntlet: "Ancestral Legacy",
-          boots: "Desolate Boots",
-          necklace: "Ironblood Soul",
-          amulet: "Bloodhowl Charm",
-          ring: "Dragon's Might"
-        },
-        alternatives: {
-          cuirass: ["Conqueror Soul"],
-          gauntlet: ["Ruler's Gauntlets"],
-          amulet: ["Eye of Thunder"]
-        }
-      },
-      {
-        class: "Savage",
-        coreSkill: "Bladestorm",
-        build: "Thunder",
-        variant: "PvP",
-        gear: {
-          weapon: "Ancestor",
-          helmet: "Desolate Helm",
-          cuirass: "Desolate Cuirass",
-          belt: "Desolate Belt",
-          greaves: "Desolate Greaves",
-          pauldron: "Demonbane Pauldron",
-          bracers: "Might of Fury",
-          gauntlet: "Ruler's Gauntlets",
-          boots: "Bloodclaw Sabatons",
-          necklace: "Ironblood Soul",
-          amulet: "Bloodhowl Charm",
-          ring: "Dragon's Might"
-        },
-        alternatives: {
-          gauntlet: ["Gladiator's Force"]
-        }
+      function collapseSpaces(s) {
+        let out = String(s || "");
+        while (out.includes("  ")) out = out.replaceAll("  ", " ");
+        return out;
       }
-    ];
 
-    function escapeHtml(str) {
-      return String(str)
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
-    }
+      function normalizeKey(s) {
+        return collapseSpaces(String(s || "").trim().replaceAll("’", "'")).toLowerCase();
+      }
 
-    function titleCase(s) {
-      if (!s) return "";
-      return s.charAt(0).toUpperCase() + s.slice(1);
-    }
+      function normalizeItemName(name) {
+        const raw = collapseSpaces(String(name || "").trim().replaceAll("’", "'"));
+        if (!raw) return "";
+        const key = normalizeKey(raw);
+        return NAME_ALIASES[key] || raw;
+      }
 
-    function wikiUrlForBuild(buildName) {
-      const slug = String(buildName || "").trim().split(" ").filter(Boolean).join("_");
-      return WIKI_BASE + encodeURIComponent(slug);
-    }
+      // --- Separate storage per class (Arcanist vs Savage) ---
+      const STORAGE_KEY_PREFIX = "lootborn_inventory_v3";
+      function storageKeyFor(cls) {
+        return STORAGE_KEY_PREFIX + "_" + String(cls || "").toLowerCase();
+      }
 
-    function getClassFilter() {
-      const el = document.getElementById("classFilter");
-      return el ? el.value : "Arcanist";
-    }
+      // Builds list
+      const builds = [
+        // --- Arcanist builds ---
+        {
+          class: "Arcanist",
+          coreSkill: "Fireball",
+          build: "Iceflame",
+          variant: "PvE",
+          gear: {
+            weapon: "Fate Intertwined",
+            helmet: "Evil Spirit Skull",
+            cuirass: "Void Cavity",
+            belt: "Resurrection",
+            greaves: "Void Hip",
+            pauldron: "Fairy Whisper",
+            bracers: "Dragon Roar Mark",
+            gauntlet: "Void Arm",
+            boots: "Void Shin",
+            necklace: "Balance Chain",
+            amulet: "End's Return",
+            ring: "Swift Shadow Finger"
+          },
+          alternatives: {
+            boots: ["Planar Shortcut"],
+            amulet: ["Overflow Amulet"],
+            belt: ["Viper Bond"]
+          }
+        },
+        {
+          class: "Arcanist",
+          coreSkill: "Fireball",
+          build: "Iceflame",
+          variant: "Ancient God PvE",
+          gear: {
+            weapon: "Ancient God's Call",
+            helmet: "Dragon Claw Visage",
+            cuirass: "Dragon Bone Armor",
+            belt: "Dragon Soul Smile",
+            greaves: "Dragon Spine Leggings",
+            pauldron: "Fairy Whisper",
+            bracers: "Dragon Roar Mark",
+            gauntlet: "Dragon Fury Grip",
+            boots: "Dragon Hymn Walker",
+            necklace: "Temporal Pendant",
+            amulet: "End's Return",
+            ring: "Swift Shadow Finger"
+          },
+          alternatives: {
+            amulet: ["Overflow Amulet"]
+          }
+        },
+        {
+          class: "Arcanist",
+          coreSkill: "Fireball",
+          build: "Pyroblast",
+          variant: "PvE",
+          gear: {
+            weapon: "Fate Intertwined",
+            helmet: "Dragon Claw Visage",
+            cuirass: "Dragon Bone Armor",
+            belt: "Dragon Soul Smile",
+            greaves: "Dragon Spine Leggings",
+            pauldron: "Void Scapula",
+            bracers: "Dragon Roar Mark",
+            gauntlet: "Void Arm",
+            boots: "Void Shin",
+            necklace: "Balance Chain",
+            amulet: "End's Return",
+            ring: "Swift Shadow Finger"
+          },
+          alternatives: {
+            gauntlet: ["Firm Grip"],
+            amulet: ["Holy Shelter"]
+          }
+        },
+        {
+          class: "Arcanist",
+          coreSkill: "Fireball",
+          build: "Pyroblast",
+          variant: "Ancient God PvE",
+          gear: {
+            weapon: "Fate Intertwined",
+            helmet: "Dragon Claw Visage",
+            cuirass: "Dragon Bone Armor",
+            belt: "Dragon Soul Smile",
+            greaves: "Dragon Spine Leggings",
+            pauldron: "Fairy Whisper",
+            bracers: "Dragon Roar Mark",
+            gauntlet: "Dragon Fury Grip",
+            boots: "Void Shin",
+            necklace: "Temporal Pendant",
+            amulet: "End's Return",
+            ring: "Swift Shadow Finger"
+          },
+          alternatives: {
+            greaves: ["Pact Binding"],
+            gauntlet: ["Void Arm"],
+            amulet: ["Holy Shelter"]
+          }
+        },
+        {
+          class: "Arcanist",
+          coreSkill: "Fireball",
+          build: "Pyroblast",
+          variant: "PvP",
+          gear: {
+            weapon: "Fate Intertwined",
+            helmet: "Dragon Claw Visage",
+            cuirass: "Dragon Bone Armor",
+            belt: "Dragon Soul Smile",
+            greaves: "Dragon Spine Leggings",
+            pauldron: "Void Scapula",
+            bracers: "Dragon Roar Mark",
+            gauntlet: "Void Arm",
+            boots: "Planar Shortcut",
+            necklace: "Balance Chain",
+            amulet: "End's Return",
+            ring: "Swift Shadow Finger"
+          },
+          alternatives: {
+            gauntlet: ["Firm Grip"],
+            amulet: ["Threshold Mark"]
+          }
+        },
+        {
+          class: "Arcanist",
+          coreSkill: "Fireball",
+          build: "Jolt",
+          variant: "PvE Ancient God",
+          gear: {
+            weapon: "Ancient God's Call",
+            helmet: "Dragon Claw Visage",
+            cuirass: "Dragon Bone Armor",
+            belt: "Dragon Soul Smile",
+            greaves: "Dragon Spine Leggings",
+            pauldron: "Dragon Scale Pauldrons",
+            bracers: "Enigmatic Imprint",
+            gauntlet: "Void Arm",
+            boots: "Dragon Hymn Walker",
+            necklace: "Temporal Pendant",
+            amulet: "End's Return",
+            ring: "Swift Shadow Finger"
+          },
+          alternatives: {
+            amulet: ["Holy Shelter"],
+            boots: ["Void Shin"]
+          }
+        },
+        {
+          class: "Arcanist",
+          coreSkill: "Lightning Punch",
+          build: "Ice Sword",
+          variant: "PvE",
+          gear: {
+            weapon: "Fate Intertwined",
+            helmet: "Evil Spirit Skull",
+            cuirass: "Fate Weaver's Protection",
+            belt: "Viper Bond",
+            greaves: "Fate Weaver's Desire",
+            pauldron: "Fairy Whisper",
+            bracers: "Stellar Spindle",
+            gauntlet: "Void Arm",
+            boots: "Void Shin",
+            necklace: "Balance Chain",
+            amulet: "End's Return",
+            ring: "Swift Shadow Finger"
+          },
+          alternatives: {
+            pauldron: ["Elemental Disruption", "Void Scapula"],
+            weapon: ["Sage's Tear"]
+          }
+        },
+        {
+          class: "Arcanist",
+          coreSkill: "Lightning Punch",
+          build: "Ice Sword",
+          variant: "PvP",
+          gear: {
+            weapon: "Prism",
+            helmet: "Fate Weaver's Kindness",
+            cuirass: "Fate Weaver's Protection",
+            belt: "Viper Bond",
+            greaves: "Pact Binding",
+            pauldron: "Elemental Disruption",
+            bracers: "Stellar Spindle",
+            gauntlet: "Void Arm",
+            boots: "Planar Shortcut",
+            necklace: "Balance Chain",
+            amulet: "End's Return",
+            ring: "Swift Shadow Finger"
+          },
+          alternatives: {
+            boots: ["Scholar's Journey"],
+            bracers: ["Enigmatic Imprint"],
+            weapon: ["Fate Intertwined"],
+            belt: ["Void Abdomen"]
+          }
+        },
+        {
+          class: "Arcanist",
+          coreSkill: "Lightning Punch",
+          build: "Flame Bow",
+          variant: "PvE",
+          gear: {
+            weapon: "Fate Intertwined",
+            helmet: "Evil Spirit Skull",
+            cuirass: "Void Cavity",
+            belt: "Resurrection",
+            greaves: "Fate Weaver's Desire",
+            pauldron: "Fate Weaver's Mercy",
+            bracers: "Stellar Spindle",
+            gauntlet: "Void Arm",
+            boots: "Void Shin",
+            necklace: "Balance Chain",
+            amulet: "End's Return",
+            ring: "Lucky Echo"
+          },
+          alternatives: {
+            boots: ["Planar Shortcut"],
+            ring: ["Swift Shadow Finger"]
+          }
+        },
+        {
+          class: "Arcanist",
+          coreSkill: "Lightning Punch",
+          build: "Thunder Punch",
+          variant: "PvE",
+          gear: {
+            weapon: "Fate Intertwined",
+            helmet: "Fate Weaver's Kindness",
+            cuirass: "Fel Heritage Robe",
+            belt: "Viper Bond",
+            greaves: "Fate Weaver's Desire",
+            pauldron: "Elemental Disruption",
+            bracers: "Stellar Spindle",
+            gauntlet: "Void Arm",
+            boots: "Void Shin",
+            necklace: "Balance Chain",
+            amulet: "End's Return",
+            ring: "Swift Shadow Finger"
+          },
+          alternatives: {
+            boots: ["Planar Shortcut"],
+            amulet: ["Threshold Mark"]
+          }
+        },
+        {
+          class: "Arcanist",
+          coreSkill: "Lightning Punch",
+          build: "Thunder Punch",
+          variant: "PvP",
+          gear: {
+            weapon: "Fate Intertwined",
+            helmet: "Fate Weaver's Kindness",
+            cuirass: "Fate Weaver's Protection",
+            belt: "Fate Weaver's Taking",
+            greaves: "Fate Weaver's Desire",
+            pauldron: "Fate Weaver's Mercy",
+            bracers: "Stellar Spindle",
+            gauntlet: "Void Arm",
+            boots: "Fate Weaver's Benevolence",
+            necklace: "Balance Chain",
+            amulet: "Threshold Mark",
+            ring: "Swift Shadow Finger"
+          },
+          alternatives: {
+            necklace: ["Swoosh"],
+            amulet: ["Splash"],
+            ring: ["Hiss"],
+            cuirass: ["Fel Heritage Robe"]
+          }
+        },
+        {
+          class: "Arcanist",
+          coreSkill: "Ice Ray",
+          build: "Rimebite",
+          variant: "PvE",
+          gear: {
+            weapon: "Lich Remains",
+            helmet: "Evil Spirit Skull",
+            cuirass: "Cryo Mark Robe",
+            belt: "Viper Bond",
+            greaves: "Cryo Mark Trousers",
+            pauldron: "Void Scapula",
+            bracers: "Sorrow Bracers",
+            gauntlet: "Cryo Mark Gloves",
+            boots: "Cryo Mark Boots",
+            necklace: "Temporal Pendant",
+            amulet: "Holy Shelter",
+            ring: "Winter Guard"
+          },
+          alternatives: {
+            necklace: ["Balance Chain"],
+            pauldron: ["Fairy Whisper"],
+            ring: ["Swift Shadow Finger"]
+          }
+        },
+        {
+          class: "Arcanist",
+          coreSkill: "Ice Ray",
+          build: "Rimebite",
+          variant: "PvP",
+          gear: {
+            weapon: "Fate Intertwined",
+            helmet: "Cryo Mark Crown",
+            cuirass: "Cryo Mark Robe",
+            belt: "Cryo Mark Waistband",
+            greaves: "Cryo Mark Trousers",
+            pauldron: "Fairy Whisper",
+            bracers: "Sorrow Bracers",
+            gauntlet: "Deathspeaker",
+            boots: "Planar Shortcut",
+            necklace: "Swoosh",
+            amulet: "Splash",
+            ring: "Hiss"
+          },
+          alternatives: {}
+        },
+        {
+          class: "Arcanist",
+          coreSkill: "Ice Ray",
+          build: "Pyresight",
+          variant: "PvE",
+          gear: {
+            weapon: "Lich Remains",
+            helmet: "Cryo Mark Crown",
+            cuirass: "Void Cavity",
+            belt: "Resurrection",
+            greaves: "Cryo Mark Trousers",
+            pauldron: "Cryo Mark Pauldrons",
+            bracers: "Sorrow Bracers",
+            gauntlet: "Void Arm",
+            boots: "Cryo Mark Boots",
+            necklace: "Temporal Pendant",
+            amulet: "Threshold Mark",
+            ring: "Swift Shadow Finger"
+          },
+          alternatives: {
+            weapon: ["Fate Intertwined"],
+            necklace: ["Balance Chain"],
+            ring: ["Winter Guard"]
+          }
+        },
+        {
+          class: "Arcanist",
+          coreSkill: "Ice Ray",
+          build: "Ionization",
+          variant: "PvE",
+          gear: {
+            weapon: "Lich Remains",
+            helmet: "Cryo Mark Crown",
+            cuirass: "Fel Heritage Robe",
+            belt: "Cryo Mark Waistband",
+            greaves: "Cryo Mark Trousers",
+            pauldron: "Cryo Mark Pauldrons",
+            bracers: "Sorrow Bracers",
+            gauntlet: "Void Arm",
+            boots: "Void Shin",
+            necklace: "Balance Chain",
+            amulet: "Threshold Mark",
+            ring: "Swift Shadow Finger"
+          },
+          alternatives: {}
+        },
 
-    function getFilteredBuilds() {
-      const cf = getClassFilter();
-      return builds.filter(b => b.class === cf);
-    }
+        // --- Savage builds ---
+        {
+          class: "Savage",
+          coreSkill: "Bladestorm",
+          build: "Thunder",
+          variant: "PvE",
+          gear: {
+            weapon: "Tribal Reverence",
+            helmet: "Crown of Madness",
+            cuirass: "Desolate Cuirass",
+            belt: "Desolate Belt",
+            greaves: "Desolate Greaves",
+            pauldron: "Demonbane Pauldron",
+            bracers: "Might of Fury",
+            gauntlet: "Ancestral Legacy",
+            boots: "Desolate Boots",
+            necklace: "Ironblood Soul",
+            amulet: "Bloodhowl Charm",
+            ring: "Dragon's Might"
+          },
+          alternatives: {
+            cuirass: ["Conqueror Soul"],
+            gauntlet: ["Ruler's Gauntlets"],
+            amulet: ["Eye of Thunder"]
+          }
+        },
+        {
+          class: "Savage",
+          coreSkill: "Bladestorm",
+          build: "Thunder",
+          variant: "PvP",
+          gear: {
+            weapon: "Ancestor",
+            helmet: "Desolate Helm",
+            cuirass: "Desolate Cuirass",
+            belt: "Desolate Belt",
+            greaves: "Desolate Greaves",
+            pauldron: "Demonbane Pauldron",
+            bracers: "Might of Fury",
+            gauntlet: "Ruler's Gauntlets",
+            boots: "Bloodclaw Sabatons",
+            necklace: "Ironblood Soul",
+            amulet: "Bloodhowl Charm",
+            ring: "Dragon's Might"
+          },
+          alternatives: {
+            gauntlet: ["Gladiator's Force"]
+          }
+        },
+        {
+          class: "Savage",
+          coreSkill: "Bladestorm",
+          build: "Fiery Rage",
+          variant: "PvE",
+          gear: {
+            weapon: "Tribal Reverence",
+            helmet: "Crown of Decay",
+            cuirass: "Desolate Cuirass",
+            belt: "Desolate Belt",
+            greaves: "Desolate Greaves",
+            pauldron: "Demonbane Pauldron",
+            bracers: "Might of Fury",
+            gauntlet: "Ancestral Legacy",
+            boots: "Desolate Boots",
+            necklace: "Ironblood Soul",
+            amulet: "Bloodhowl Charm",
+            ring: "Dragon's Might"
+          },
+          alternatives: {
+            helmet: ["Crown of Madness"],
+            gauntlet: ["Ruler's Gauntlets"],
+            amulet: ["Eye of Thunder"]
+          }
+        },
+        {
+          class: "Savage",
+          coreSkill: "Bladestorm",
+          build: "Fiery Rage",
+          variant: "PvP",
+          gear: {
+            weapon: "Ancestor",
+            helmet: "Desolate Helm",
+            cuirass: "Desolate Cuirass",
+            belt: "Desolate Belt",
+            greaves: "Desolate Greaves",
+            pauldron: "Demonbane Pauldron",
+            bracers: "Might of Fury",
+            gauntlet: "Ancestral Legacy",
+            boots: "Bloodclaw Sabatons",
+            necklace: "Ironblood Soul",
+            amulet: "Bloodhowl Charm",
+            ring: "Wildsoul Pact"
+          },
+          alternatives: {}
+        },
+        {
+          class: "Savage",
+          coreSkill: "Bladestorm",
+          build: "Thorn",
+          variant: "PvE",
+          gear: {
+            weapon: "Demonic Barb",
+            helmet: "Crest of Silence",
+            cuirass: "Conqueror Soul",
+            belt: "Desolate Belt",
+            greaves: "Desolate Greaves",
+            pauldron: "Demonbane Pauldron",
+            bracers: "Might of Fury",
+            gauntlet: "Ancestral Legacy",
+            boots: "Bloodclaw Sabatons",
+            necklace: "Ironblood Soul",
+            amulet: "Bloodhowl Charm",
+            ring: "Dragon's Might"
+          },
+          alternatives: {
+            helmet: ["Crown of Madness"],
+            gauntlet: ["Ruler's Gauntlets"],
+            amulet: ["Eye of Thunder"]
+          }
+        },
+        {
+          class: "Savage",
+          coreSkill: "Bladestorm",
+          build: "Thorn",
+          variant: "PvP",
+          gear: {
+            weapon: "Ancestor",
+            helmet: "Crown of Madness",
+            cuirass: "Conqueror Soul",
+            belt: "Desolate Belt",
+            greaves: "Rootguard Vessel",
+            pauldron: "Demonbane Pauldron",
+            bracers: "Might of Fury",
+            gauntlet: "Gladiator's Force",
+            boots: "Bloodclaw Sabatons",
+            necklace: "Behemoth Gorget",
+            amulet: "Bloodhowl Charm",
+            ring: "Wildsoul Pact"
+          },
+          alternatives: {}
+        },
+        {
+          class: "Savage",
+          coreSkill: "Swipe",
+          build: "Blazefury",
+          variant: "PvE",
+          gear: {
+            weapon: "Tribal Reverence",
+            helmet: "Crown of Decay",
+            cuirass: "Greed",
+            belt: "Ghost Girdle",
+            greaves: "Envy",
+            pauldron: "Demonbane Pauldron",
+            bracers: "Demon Slayer",
+            gauntlet: "Sloth",
+            boots: "Pride",
+            necklace: "Ironblood Soul",
+            amulet: "Bloodhowl Charm",
+            ring: "Wildsoul Pact"
+          },
+          alternatives: {}
+        },
+        {
+          class: "Savage",
+          coreSkill: "Swipe",
+          build: "Blazefury",
+          variant: "PvP",
+          gear: {
+            weapon: "Ancestor",
+            helmet: "Crown of Madness",
+            cuirass: "Greed",
+            belt: "Ghost Girdle",
+            greaves: "Envy",
+            pauldron: "Demonbane Pauldron",
+            bracers: "Demon Slayer",
+            gauntlet: "Sloth",
+            boots: "Pride",
+            necklace: "Ironblood Soul",
+            amulet: "Bloodhowl Charm",
+            ring: "Wildsoul Pact"
+          },
+          alternatives: {}
+        },
+        {
+          class: "Savage",
+          coreSkill: "Swipe",
+          build: "Wild Spark",
+          variant: "PvE",
+          gear: {
+            weapon: "Tribal Reverence",
+            helmet: "Crown of Madness",
+            cuirass: "Greed",
+            belt: "Ghost Girdle",
+            greaves: "Envy",
+            pauldron: "Demonbane Pauldron",
+            bracers: "Demon Slayer",
+            gauntlet: "Sloth",
+            boots: "Pride",
+            necklace: "Ironblood Soul",
+            amulet: "Bloodhowl Charm",
+            ring: "Wildsoul Pact"
+          },
+          alternatives: {
+            helmet: ["Crown of Decay"]
+          }
+        },
+        {
+          class: "Savage",
+          coreSkill: "Swipe",
+          build: "Ritual Blade",
+          variant: "PvE",
+          gear: {
+            weapon: "Tribal Reverence",
+            helmet: "Crown of Madness",
+            cuirass: "Conqueror Soul",
+            belt: "Lust",
+            greaves: "Envy",
+            pauldron: "Deathguard Pauldron",
+            bracers: "Demon Slayer",
+            gauntlet: "Sloth",
+            boots: "Pride",
+            necklace: "Ironblood Soul",
+            amulet: "Bloodhowl Charm",
+            ring: "Wildsoul Pact"
+          },
+          alternatives: {
+            helmet: ["Crown of Decay"]
+          }
+        },
+        {
+          class: "Savage",
+          coreSkill: "Heavy Blow",
+          build: "Hellfire",
+          variant: "PvE",
+          gear: {
+            weapon: "Tribal Reverence",
+            helmet: "Crown of Madness",
+            cuirass: "Eternal Ruler's Dominion",
+            belt: "Eternal Ruler's Design",
+            greaves: "Eternal Ruler's Gaze",
+            pauldron: "Demonbane Pauldron",
+            bracers: "Hand of Annihilation",
+            gauntlet: "Ruler's Gauntlets",
+            boots: "Eternal Ruler's Mark",
+            necklace: "Ironblood Soul",
+            amulet: "Bloodhowl Charm",
+            ring: "Dragon's Might"
+          },
+          alternatives: {
+            gauntlet: ["Ancestral Legacy", "Eternal Ruler's Shackles"],
+            boots: ["Raider'd Folly"]
+          }
+        },
+        {
+          class: "Savage",
+          coreSkill: "Heavy Blow",
+          build: "Hellfire",
+          variant: "PvP",
+          gear: {
+            weapon: "Ancestor",
+            helmet: "Crown of Madness",
+            cuirass: "Eternal Ruler's Dominion",
+            belt: "Eternal Ruler's Design",
+            greaves: "Eternal Ruler's Gaze",
+            pauldron: "Demonbane Pauldron",
+            bracers: "Hand of Annihilation",
+            gauntlet: "Ruler's Gauntlets",
+            boots: "Eternal Ruler's Mark",
+            necklace: "Ironblood Soul",
+            amulet: "Bloodhowl Charm",
+            ring: "Wildsoul Pact"
+          },
+          alternatives: {}
+        },
+        {
+          class: "Savage",
+          coreSkill: "Heavy Blow",
+          build: "Ice Blast",
+          variant: "PvE",
+          gear: {
+            weapon: "Demonic Barb",
+            helmet: "Crown of Decay",
+            cuirass: "Eternal Ruler's Dominion",
+            belt: "Eternal Ruler's Design",
+            greaves: "Eternal Ruler's Gaze",
+            pauldron: "Eternal Ruler's Resolve",
+            bracers: "Hand of Annihilation",
+            gauntlet: "Eternal Ruler's Shackles",
+            boots: "Eternal Ruler's Mark",
+            necklace: "Obsidian Heart",
+            amulet: "Bloodhowl Charm",
+            ring: "Dragon's Might"
+          },
+          alternatives: {
+            weapon: ["Tribal Reverence"],
+            helmet: ["Crown of Madness"],
+            necklace: ["Ironblood Soul"]
+          }
+        },
+        {
+          class: "Savage",
+          coreSkill: "Heavy Blow",
+          build: "Thunderbolt",
+          variant: "PvE",
+          gear: {
+            weapon: "Tribal Reverence",
+            helmet: "Crown of Decay",
+            cuirass: "Eternal Ruler's Dominion",
+            belt: "Eternal Ruler's Design",
+            greaves: "Eternal Ruler's Gaze",
+            pauldron: "Demonbane Pauldron",
+            bracers: "Hand of Annihilation",
+            gauntlet: "Ancestral Legacy",
+            boots: "Eternal Ruler's Mark",
+            necklace: "Ironblood Soul",
+            amulet: "Bloodhowl Charm",
+            ring: "Dragon's Might"
+          },
+          alternatives: {
+            gauntlet: ["Ruler's Gauntlets", "Eternal Ruler's Shackles"],
+            boots: ["Raider'd Folly"]
+          }
+        },
+        {
+          class: "Savage",
+          coreSkill: "Heavy Blow",
+          build: "Thunderbolt",
+          variant: "PvP",
+          gear: {
+            weapon: "Ancestor",
+            helmet: "Crown of Decay",
+            cuirass: "Eternal Ruler's Dominion",
+            belt: "Eternal Ruler's Design",
+            greaves: "Eternal Ruler's Gaze",
+            pauldron: "Demonbane Pauldron",
+            bracers: "Hand of Annihilation",
+            gauntlet: "Ancestral Legacy",
+            boots: "Eternal Ruler's Mark",
+            necklace: "Ironblood Soul",
+            amulet: "Bloodhowl Charm",
+            ring: "Wildsoul Pact"
+          },
+          alternatives: {}
+        }
+      ];
 
-    function emptyInventory() {
-      const inv = {};
-      for (const slot of slots) inv[slot] = new Set();
-      return inv;
-    }
+      function escapeHtml(str) {
+        return String(str)
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#039;");
+      }
 
-    function loadInventory(cls) {
-      const inv = emptyInventory();
-      try {
-        const raw = localStorage.getItem(storageKeyFor(cls));
-        if (!raw) return inv;
-        const obj = JSON.parse(raw);
-        for (const slot of slots) {
-          const arr = obj && obj[slot];
-          if (Array.isArray(arr)) {
-            for (const it of arr) inv[slot].add(normalizeItemName(it));
+      function titleCase(s) {
+        if (!s) return "";
+        return s.charAt(0).toUpperCase() + s.slice(1);
+      }
+
+      function wikiUrlForBuild(buildName) {
+        const slug = String(buildName || "").trim().split(" ").filter(Boolean).join("_");
+        return WIKI_BASE + encodeURIComponent(slug);
+      }
+
+      function getClassFilter() {
+        const el = document.getElementById("classFilter");
+        return el ? el.value : "Arcanist";
+      }
+
+      function getFilteredBuilds() {
+        const cf = getClassFilter();
+        return builds.filter(b => b.class === cf);
+      }
+
+      function emptyInventory() {
+        const inv = {};
+        for (const slot of slots) inv[slot] = new Set();
+        return inv;
+      }
+
+      function loadInventory(cls) {
+        const inv = emptyInventory();
+        try {
+          const raw = localStorage.getItem(storageKeyFor(cls));
+          if (!raw) return inv;
+          const obj = JSON.parse(raw);
+          for (const slot of slots) {
+            const arr = obj && obj[slot];
+            if (Array.isArray(arr)) {
+              for (const it of arr) inv[slot].add(normalizeItemName(it));
+            }
+          }
+        } catch (e) {}
+        return inv;
+      }
+
+      function saveInventory(inv, cls) {
+        const obj = {};
+        for (const slot of slots) obj[slot] = Array.from(inv[slot]);
+        localStorage.setItem(storageKeyFor(cls), JSON.stringify(obj));
+      }
+
+      let activeClass = getClassFilter();
+      let inventory = loadInventory(activeClass);
+
+      function buildItemCatalog(filteredBuilds) {
+        const bySlot = {};
+        for (const slot of slots) bySlot[slot] = [];
+
+        for (const b of filteredBuilds) {
+          for (const slot of slots) {
+            const req = b.gear && b.gear[slot];
+            if (req) bySlot[slot].push(normalizeItemName(req));
+            const alts = (b.alternatives && b.alternatives[slot]) ? b.alternatives[slot] : [];
+            for (const a of alts) bySlot[slot].push(normalizeItemName(a));
           }
         }
-      } catch (e) {}
-      return inv;
-    }
 
-    function saveInventory(inv, cls) {
-      const obj = {};
-      for (const slot of slots) obj[slot] = Array.from(inv[slot]);
-      localStorage.setItem(storageKeyFor(cls), JSON.stringify(obj));
-    }
-
-    let activeClass = getClassFilter();
-    let inventory = loadInventory(activeClass);
-
-    function clearInventory() {
-      inventory = emptyInventory();
-      saveInventory(inventory, activeClass);
-      renderInventory();
-      renderBuilds();
-    }
-
-    function buildItemCatalog(filteredBuilds) {
-      const bySlot = {};
-      for (const slot of slots) bySlot[slot] = [];
-
-      for (const b of filteredBuilds) {
+        const uniqSorted = {};
         for (const slot of slots) {
-          const req = b.gear && b.gear[slot];
-          if (req) bySlot[slot].push(normalizeItemName(req));
-          const alts = (b.alternatives && b.alternatives[slot]) ? b.alternatives[slot] : [];
-          for (const a of alts) bySlot[slot].push(normalizeItemName(a));
-        }
-      }
-
-      const uniqSorted = {};
-      for (const slot of slots) {
-        const seen = new Set();
-        const out = [];
-        for (const it of bySlot[slot]) {
-          const item = normalizeItemName(it);
-          if (!item) continue;
-          if (seen.has(item)) continue;
-          seen.add(item);
-          out.push(item);
-        }
-        out.sort((a, b) => a.localeCompare(b));
-        uniqSorted[slot] = out;
-      }
-
-      return uniqSorted;
-    }
-
-    function buildScore(build) {
-      let requiredCount = 0;
-      let optimalOwned = 0;
-      let playable = true;
-
-      for (const slot of slots) {
-        const requiredRaw = build.gear && build.gear[slot];
-        if (!requiredRaw) continue;
-        const required = normalizeItemName(requiredRaw);
-        requiredCount++;
-
-        if (inventory[slot].has(required)) {
-          optimalOwned++;
-          continue;
+          const seen = new Set();
+          const out = [];
+          for (const it of bySlot[slot]) {
+            const item = normalizeItemName(it);
+            if (!item) continue;
+            if (seen.has(item)) continue;
+            seen.add(item);
+            out.push(item);
+          }
+          out.sort((a, b) => a.localeCompare(b));
+          uniqSorted[slot] = out;
         }
 
-        const altsRaw = (build.alternatives && build.alternatives[slot]) ? build.alternatives[slot] : [];
-        const ownedAlt = altsRaw.map(normalizeItemName).find(a => inventory[slot].has(a));
-        if (!ownedAlt) playable = false;
+        return uniqSorted;
       }
 
-      const optimalPct = requiredCount ? Math.round((optimalOwned / requiredCount) * 100) : 0;
-      return { requiredCount, optimalOwned, optimalPct, playable };
-    }
+      // Playable = every required slot has either optimal item OR one of the listed substitutes.
+      // Optimal % = how many optimal (required) items you own / total required.
+      function buildScore(build) {
+        let requiredCount = 0;
+        let optimalOwned = 0;
+        let playable = true;
 
-    function buildGearBreakdown(build) {
-      const rows = [];
-      for (const slot of slots) {
-        const reqRaw = build.gear && build.gear[slot];
-        if (!reqRaw) continue;
-        const req = normalizeItemName(reqRaw);
+        for (const slot of slots) {
+          const requiredRaw = build.gear && build.gear[slot];
+          if (!requiredRaw) continue;
 
-        const hasReq = inventory[slot].has(req);
-        const altsRaw = (build.alternatives && build.alternatives[slot]) ? build.alternatives[slot] : [];
-        const ownedAlt = altsRaw.map(normalizeItemName).find(a => inventory[slot].has(a));
+          const required = normalizeItemName(requiredRaw);
+          requiredCount++;
 
-        rows.push({
-          slot,
-          required: req,
-          status: hasReq ? "owned" : (ownedAlt ? "sub" : "missing"),
-          substitute: ownedAlt || ""
-        });
-      }
-      return rows;
-    }
+          const hasReq = inventory[slot].has(required);
+          if (hasReq) optimalOwned++;
 
-    function gearDetailsHtml(build) {
-      const rows = buildGearBreakdown(build);
-      const wiki = wikiUrlForBuild(build.build);
+          const altsRaw = (build.alternatives && build.alternatives[slot]) ? build.alternatives[slot] : [];
+          const ownedAlt = altsRaw.map(normalizeItemName).find(a => inventory[slot].has(a));
 
-      let html = '<details><summary>Build details</summary>';
-      html += '<div style="margin-top:8px; display:flex; gap:10px; flex-wrap:wrap; align-items:center;">';
-      html += '<a href="' + escapeHtml(wiki) + '" target="_blank" rel="noopener" style="color: var(--warn); text-decoration: none; font-weight: 800;">Open wiki page</a>';
-      html += '<span class="small">(opens in new tab)</span>';
-      html += '</div>';
-
-      html += '<div style="margin-top:10px;"><ul>';
-      for (const r of rows) {
-        if (r.status === "owned") {
-          html += '<li><span class="ok">✓</span> <b>' + escapeHtml(titleCase(r.slot)) + '</b>: ' + escapeHtml(r.required) + '</li>';
-        } else if (r.status === "sub") {
-          html += '<li><span class="warn">~</span> <b>' + escapeHtml(titleCase(r.slot)) + '</b>: missing ' + escapeHtml(r.required) + ' — using ' + escapeHtml(r.substitute) + '</li>';
-        } else {
-          html += '<li><span class="bad">✗</span> <b>' + escapeHtml(titleCase(r.slot)) + '</b>: ' + escapeHtml(r.required) + '</li>';
-        }
-      }
-      html += '</ul></div></details>';
-      return html;
-    }
-
-    function renderBuilds() {
-      const out = document.getElementById("buildResults");
-      const playableOnly = document.getElementById("showPlayableOnly").checked;
-      const sortByOptimal = document.getElementById("sortByOptimal").checked;
-
-      const filteredBuilds = getFilteredBuilds();
-      if (!filteredBuilds.length) {
-        out.innerHTML = '<div class="hint">No ' + escapeHtml(getClassFilter()) + ' builds added yet.</div>';
-        return;
-      }
-
-      let rows = filteredBuilds.map(b => ({ b, s: buildScore(b) }));
-      if (playableOnly) rows = rows.filter(r => r.s.playable);
-      if (sortByOptimal) rows.sort((a, b) => b.s.optimalPct - a.s.optimalPct);
-
-      out.innerHTML = "";
-      for (const { b, s } of rows) {
-        const div = document.createElement("div");
-        div.className = "build";
-
-        const playableLabel = s.playable ? '<span class="ok">Playable</span>' : '<span class="bad">Not playable</span>';
-
-        div.innerHTML =
-          '<h3>' + escapeHtml(b.build) + ' – ' + escapeHtml(b.variant) + '</h3>' +
-          '<div class="meta">' + escapeHtml(b.class) + ' • ' + escapeHtml(b.coreSkill) + ' • ' + s.optimalOwned + '/' + s.requiredCount + ' optimal</div>' +
-          '<div class="progress">Optimal: ' + s.optimalPct + '%</div>' +
-          '<div style="margin-top:6px;">' + playableLabel + '</div>' +
-          gearDetailsHtml(b);
-
-        out.appendChild(div);
-      }
-    }
-
-    function renderInventory() {
-      const grid = document.getElementById("invGrid");
-      grid.innerHTML = "";
-
-      const filteredBuilds = getFilteredBuilds();
-      if (!filteredBuilds.length) {
-        grid.innerHTML = '<div class="hint">No ' + escapeHtml(getClassFilter()) + ' items yet (add builds for this class to populate the item list).</div>';
-        return;
-      }
-
-      const catalog = buildItemCatalog(filteredBuilds);
-
-      for (const slot of slots) {
-        const wrap = document.createElement("div");
-        wrap.className = "slot";
-
-        const items = catalog[slot];
-        const countOwned = inventory[slot].size;
-
-        let html = '<label>' + titleCase(slot) + ' <span class="small">(' + countOwned + ' owned)</span></label>';
-
-        if (!items.length) {
-          html += '<div class="hint">No items loaded for this slot.</div>';
-          wrap.innerHTML = html;
-          grid.appendChild(wrap);
-          continue;
+          if (!hasReq && !ownedAlt) playable = false;
         }
 
-        html += '<div>';
-        for (const item of items) {
-          const id = ('cb_' + slot + '_' + item).replaceAll(' ', '_').replaceAll("'", "");
-          const checked = inventory[slot].has(item) ? 'checked' : '';
-          html +=
-            '<div style="display:flex; gap:10px; align-items:flex-start; margin:6px 0;">' +
-              '<input type="checkbox" id="' + escapeHtml(id) + '" data-slot="' + escapeHtml(slot) + '" data-item="' + escapeHtml(item) + '" ' + checked + ' />' +
-              '<label for="' + escapeHtml(id) + '" style="margin:0; font-weight:600; cursor:pointer;">' + escapeHtml(item) + '</label>' +
-            '</div>';
+        const optimalPct = requiredCount ? Math.round((optimalOwned / requiredCount) * 100) : 0;
+        return { requiredCount, optimalOwned, optimalPct, playable };
+      }
+
+      function buildGearBreakdown(build) {
+        const rows = [];
+
+        for (const slot of slots) {
+          const reqRaw = build.gear && build.gear[slot];
+          if (!reqRaw) continue;
+
+          const required = normalizeItemName(reqRaw);
+          const altsRaw = (build.alternatives && build.alternatives[slot]) ? build.alternatives[slot] : [];
+          const altList = altsRaw.map(normalizeItemName).filter(Boolean);
+
+          const hasRequired = inventory[slot].has(required);
+          const ownedAlts = altList.filter(a => inventory[slot].has(a));
+
+          rows.push({
+            slot,
+            required,
+            altList,
+            hasRequired,
+            ownedAlts
+          });
         }
+
+        return rows;
+      }
+
+      // Details rules:
+      // - If you own optimal: show it as optimal; if you also own substitutes, list them under it.
+      // - If you don't own optimal but own substitute: show substitute as playable-not-optimal; show optimal under it.
+      // - If you own neither: show missing; list substitutes.
+      function gearDetailsHtml(build) {
+        const rows = buildGearBreakdown(build);
+        const wiki = wikiUrlForBuild(build.build);
+
+        let html = '<details><summary>Build details</summary>';
+        html += '<div style="margin-top:8px; display:flex; gap:10px; flex-wrap:wrap; align-items:center;">';
+        html += '<a href="' + escapeHtml(wiki) + '" target="_blank" rel="noopener" style="color: var(--warn); text-decoration: none; font-weight: 800;">Open wiki page</a>';
+        html += '<span class="small">(opens in new tab)</span>';
         html += '</div>';
 
-        wrap.innerHTML = html;
-        grid.appendChild(wrap);
+        html += '<div style="margin-top:10px;"><ul>';
+
+        for (const r of rows) {
+          const slotLabel = '<b>' + escapeHtml(titleCase(r.slot)) + '</b>: ';
+
+          if (r.hasRequired) {
+            html += '<li><span class="ok">✓</span> ' + slotLabel + escapeHtml(r.required) + ' <span class="small">(optimal)</span>';
+            if (r.ownedAlts.length > 0) {
+              html += '<div class="small" style="margin-left:22px; margin-top:2px;">Also owned substitutes: ' + escapeHtml(r.ownedAlts.join(", ")) + '</div>';
+            }
+            html += '</li>';
+            continue;
+          }
+
+          if (r.ownedAlts.length > 0) {
+            html += '<li><span class="warn">~</span> ' + slotLabel + escapeHtml(r.ownedAlts[0]) + ' <span class="small">(playable, not optimal)</span>';
+            html += '<div class="small" style="margin-left:22px; margin-top:2px;">Optimal item: ' + escapeHtml(r.required) + '</div>';
+
+            const extraAlts = r.ownedAlts.slice(1);
+            if (extraAlts.length > 0) {
+              html += '<div class="small" style="margin-left:22px; margin-top:2px;">Other owned substitutes: ' + escapeHtml(extraAlts.join(", ")) + '</div>';
+            }
+            html += '</li>';
+            continue;
+          }
+
+          html += '<li><span class="bad">✗</span> ' + slotLabel + escapeHtml(r.required) + ' <span class="small">(missing)</span>';
+          if (r.altList.length > 0) {
+            html += '<div class="small" style="margin-left:22px; margin-top:2px;">Substitutes: ' + escapeHtml(r.altList.join(", ")) + '</div>';
+          }
+          html += '</li>';
+        }
+
+        html += '</ul></div></details>';
+        return html;
       }
 
-      grid.querySelectorAll('input[type=checkbox]').forEach(cb => {
-        cb.addEventListener('change', (e) => {
-          const slot = e.target.getAttribute('data-slot');
-          const item = normalizeItemName(e.target.getAttribute('data-item'));
-          if (!slot || !item) return;
+      function renderBuilds() {
+        const out = document.getElementById("buildResults");
+        const playableOnly = document.getElementById("showPlayableOnly").checked;
+        const sortByOptimal = document.getElementById("sortByOptimal").checked;
 
-          if (e.target.checked) inventory[slot].add(item);
-          else inventory[slot].delete(item);
+        const filteredBuilds = getFilteredBuilds();
+        if (!filteredBuilds.length) {
+          out.innerHTML = '<div class="hint">No ' + escapeHtml(getClassFilter()) + ' builds added yet.</div>';
+          return;
+        }
 
-          saveInventory(inventory, activeClass);
-          renderBuilds();
-          renderInventory();
+        let rows = filteredBuilds.map(b => ({ b, s: buildScore(b) }));
+        if (playableOnly) rows = rows.filter(r => r.s.playable);
+        if (sortByOptimal) rows.sort((a, b) => b.s.optimalPct - a.s.optimalPct);
+
+        out.innerHTML = "";
+        for (const row of rows) {
+          const b = row.b;
+          const s = row.s;
+
+          const playableLabel = (() => {
+            if (!s.playable) return '<span class="bad">Not playable</span>';
+            if (s.optimalPct === 100) return '<span class="ok">Playable (optimal)</span>';
+            return '<span class="warn">Playable (using substitutes)</span>';
+          })();
+
+          const div = document.createElement("div");
+          div.className = "build";
+          div.innerHTML =
+            '<h3>' + escapeHtml(b.build) + ' – ' + escapeHtml(b.variant) + '</h3>' +
+            '<div class="meta">' + escapeHtml(b.class) + ' • ' + escapeHtml(b.coreSkill) + ' • ' + s.optimalOwned + '/' + s.requiredCount + ' optimal</div>' +
+            '<div class="progress">Optimal: ' + s.optimalPct + '%</div>' +
+            '<div style="margin-top:6px;">' + playableLabel + '</div>' +
+            gearDetailsHtml(b);
+
+          out.appendChild(div);
+        }
+      }
+
+      function renderInventory() {
+        const grid = document.getElementById("invGrid");
+        grid.innerHTML = "";
+
+        const filteredBuilds = getFilteredBuilds();
+        if (!filteredBuilds.length) {
+          grid.innerHTML = '<div class="hint">No ' + escapeHtml(getClassFilter()) + ' items yet (add builds for this class to populate the item list).</div>';
+          return;
+        }
+
+        const catalog = buildItemCatalog(filteredBuilds);
+
+        for (const slot of slots) {
+          const wrap = document.createElement("div");
+          wrap.className = "slot";
+
+          const items = catalog[slot];
+          const countOwned = inventory[slot].size;
+
+          let html = '<label>' + titleCase(slot) + ' <span class="small">(' + countOwned + ' owned)</span></label>';
+
+          if (!items.length) {
+            html += '<div class="hint">No items loaded for this slot.</div>';
+            wrap.innerHTML = html;
+            grid.appendChild(wrap);
+            continue;
+          }
+
+          html += '<div>';
+          for (const item of items) {
+            const id = ('cb_' + slot + '_' + item).replaceAll(' ', '_').replaceAll("'", "");
+            const checked = inventory[slot].has(item) ? 'checked' : '';
+            html +=
+              '<div style="display:flex; gap:10px; align-items:flex-start; margin:6px 0;">' +
+                '<input type="checkbox" id="' + escapeHtml(id) + '" data-slot="' + escapeHtml(slot) + '" data-item="' + escapeHtml(item) + '" ' + checked + ' />' +
+                '<label for="' + escapeHtml(id) + '" style="margin:0; font-weight:600; cursor:pointer;">' + escapeHtml(item) + '</label>' +
+              '</div>';
+          }
+          html += '</div>';
+
+          wrap.innerHTML = html;
+          grid.appendChild(wrap);
+        }
+
+        grid.querySelectorAll('input[type=checkbox]').forEach(cb => {
+          cb.addEventListener('change', (e) => {
+            const slot = e.target.getAttribute('data-slot');
+            const item = normalizeItemName(e.target.getAttribute('data-item'));
+            if (!slot || !item) return;
+
+            if (e.target.checked) inventory[slot].add(item);
+            else inventory[slot].delete(item);
+
+            saveInventory(inventory, activeClass);
+            renderBuilds();
+            renderInventory();
+          });
         });
+      }
+
+      function setActiveClass(cls) {
+        activeClass = cls;
+        inventory = loadInventory(activeClass);
+        renderInventory();
+        renderBuilds();
+      }
+
+      // Controls
+      document.getElementById("saveBtn").addEventListener("click", () => {
+        saveInventory(inventory, activeClass);
+        renderBuilds();
+        renderInventory();
       });
-    }
 
-    // Controls
-    document.getElementById('clearBtn').addEventListener('click', () => {
-      if (confirm('Clear your saved ' + activeClass + ' inventory?')) clearInventory();
+      document.getElementById("clearBtn").addEventListener("click", () => {
+        inventory = emptyInventory();
+        saveInventory(inventory, activeClass);
+        renderBuilds();
+        renderInventory();
+      });
+
+      document.getElementById("showPlayableOnly").addEventListener("change", () => renderBuilds());
+      document.getElementById("sortByOptimal").addEventListener("change", () => renderBuilds());
+
+      document.getElementById("classFilter").addEventListener("change", (e) => {
+        setActiveClass(e.target.value);
+      });
+
+      // Initial render
+      setActiveClass(getClassFilter());
     });
-
-    document.getElementById('saveBtn').addEventListener('click', () => {
-      saveInventory(inventory, activeClass);
-      renderBuilds();
-    });
-
-    document.getElementById('showPlayableOnly').addEventListener('change', renderBuilds);
-    document.getElementById('sortByOptimal').addEventListener('change', renderBuilds);
-
-    document.getElementById('classFilter').addEventListener('change', () => {
-      saveInventory(inventory, activeClass);
-      activeClass = getClassFilter();
-      inventory = loadInventory(activeClass);
-      renderInventory();
-      renderBuilds();
-    });
-
-    // Init
-    renderInventory();
-    renderBuilds();
-  });
-</script>
+  </script>
 </body>
 </html>
