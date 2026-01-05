@@ -33,9 +33,10 @@
 
     .inv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-top:10px;}
     .slot{background:rgba(0,0,0,0.20);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:10px;}
-    .slot label{display:block;font-weight:700;margin-bottom:6px;}
+    .slot label{display:block;font-weight:600;margin-bottom:6px;}
 
-    button{cursor:pointer;background:var(--btn);color:var(--text);border:1px solid rgba(255,255,255,0.10);border-radius:10px;padding:10px 12px;font-weight:800;}
+
+    button{cursor:pointer;background:var(--btn);color:var(--text);border:1px solid rgba(255,255,255,0.10);border-radius:10px;padding:10px 12px;font-weight:600;}
     button:hover{filter:brightness(1.08);} 
     button:active{transform:translateY(1px);} 
 
@@ -48,7 +49,7 @@
     .toggle-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:10px;}
 
     .class-switch{display:flex;gap:10px;align-items:center;justify-content:flex-end;flex-wrap:wrap;}
-    .pill{cursor:pointer;background:#222738;color:var(--text);border:1px solid rgba(255,255,255,0.10);border-radius:999px;padding:10px 14px;font-weight:900;}
+    .pill{cursor:pointer;background:#222738;color:var(--text);border:1px solid rgba(255,255,255,0.10);border-radius:999px;padding:10px 14px;font-weight:600;}
     .pill:hover{filter:brightness(1.08);} 
     .pill:active{transform:translateY(1px);} 
     .pill.active{outline:2px solid rgba(255,255,255,0.25);filter:brightness(1.12);}
@@ -56,10 +57,10 @@
 
     .build{background:rgba(0,0,0,0.20);border:1px solid rgba(255,255,255,0.08);padding:14px;border-radius:12px;margin-bottom:12px;}
     .meta{color:var(--muted);font-size:0.92em;margin-top:-6px;margin-bottom:8px;}
-    .progress{font-weight:900;}
-    .ok{color:var(--ok);font-weight:900;}
-    .bad{color:var(--bad);font-weight:900;}
-    .warn{color:var(--warn);font-weight:900;}
+    .progress{font-weight:600;}
+    .ok{color:var(--ok);font-weight:600;}
+    .bad{color:var(--bad);font-weight:600;}
+    .warn{color:var(--warn);font-weight:600;}
 
 /* "Incomplete" label: different red, not bold */
 .incomplete{
@@ -77,16 +78,16 @@
     li{margin:4px 0;}
 
     /* Item name coloring (default red, some green set pieces) */
-    .item-red{color:var(--red);font-weight:800;}
-    .item-green{color:var(--green);font-weight:800;}
-    .item{color:var(--text);font-weight:800;}
+    .item-red{color:var(--red);font-weight:500;}
+    .item-green{color:var(--green);font-weight:500;}
+    .item{color:var(--text);font-weight:500;}
   </style>
 </head>
 <body>
   <div class="container">
     <div class="topbar">
       <div>
-        <h1>Lootborn Build Tracker v3.11</h1>
+        <h1>Lootborn Build Tracker v3.12</h1>
         <div class="small">Saves in your browser (no login). Arcanist and Savage are stored separately because their stash items are different.</div>
       </div>
       <div class="class-switch" role="group" aria-label="Class switch">
