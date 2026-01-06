@@ -112,12 +112,16 @@
         <div class="inv-grid" id="invGrid"></div>
       </div>
 
-      <div class="card">
-        <h2>Builds you are closest to</h2>
-        <div class="toggle-row">
-          <label><input type="checkbox" id="showPlayableOnly" /> Show playable only</label>
-          <label><input type="checkbox" id="sortByOptimal" checked /> Sort by optimal percent</label>
-        </div>
+      <div class="toggle-row">
+        <label><input type="checkbox" id="showPlayableOnly" /> Show playable only</label>
+
+        <label><input type="checkbox" id="filterPVE" checked /> PvE</label>
+        <label><input type="checkbox" id="filterPVP" checked /> PvP</label>
+        <label><input type="checkbox" id="filterAncientGod" checked /> Ancient God</label>
+
+        <label><input type="checkbox" id="sortByOptimal" checked /> Sort by optimal percent</label>
+      </div>
+
         <div id="buildResults" style="margin-top:12px;"></div>
       </div>
     </div>
@@ -1177,6 +1181,9 @@ html += '<li><span class="bad">✗</span> ' +
         const out = document.getElementById("buildResults");
         const playableOnly = document.getElementById("showPlayableOnly").checked;
         const sortByOptimal = document.getElementById("sortByOptimal").checked;
+        const showPVE = document.getElementById("filterPVE").checked;
+        const showPVP = document.getElementById("filterPVP").checked;
+        const showAncientGod = document.getElementById("filterAncientGod").checked;
 
         const filteredBuilds = getFilteredBuilds();
         if (!filteredBuilds.length) {
@@ -1185,6 +1192,18 @@ html += '<li><span class="bad">✗</span> ' +
         }
 
         let rows = filteredBuilds.map(b => ({ b, s: buildScore(b) }));
+        rows = rows.filter(r => {
+  const v = String(r.b.variant || "");
+  const isPVP = v.includes("PvP");
+  const isAncientGod = v.includes("Ancient God");
+  const isPVE = !isPVP;
+
+  const modeOk = (isPVE && showPVE) || (isPVP && showPVP);
+  const agOk = showAncientGod || !isAncientGod;
+
+  return modeOk && agOk;
+});
+
         if (playableOnly) rows = rows.filter(r => r.s.playable);
         if (sortByOptimal) rows.sort((a, b) => b.s.optimalPct - a.s.optimalPct);
 
@@ -1351,6 +1370,9 @@ div.innerHTML =
 
       document.getElementById('showPlayableOnly').addEventListener('change', renderBuilds);
       document.getElementById('sortByOptimal').addEventListener('change', renderBuilds);
+      document.getElementById('filterPVE').addEventListener('change', renderBuilds);
+      document.getElementById('filterPVP').addEventListener('change', renderBuilds);
+      ocument.getElementById('filterAncientGod').addEventListener('change', renderBuilds);
 
       // Init
       //runSelfTests();
