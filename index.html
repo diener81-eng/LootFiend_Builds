@@ -57,10 +57,23 @@
 
     .build{background:rgba(0,0,0,0.20);border:1px solid rgba(255,255,255,0.08);padding:14px;border-radius:12px;margin-bottom:12px;}
     .meta{color:var(--muted);font-size:0.92em;margin-top:-6px;margin-bottom:8px;}
-    .progress{font-weight:600;}
+    .progress{font-weight:600;letter-spacing:0.2px;}
+
     .ok{color:var(--ok);font-weight:600;}
     .bad{color:var(--bad);font-weight:600;}
     .warn{color:var(--warn);font-weight:600;}
+/* Optimal % color states */
+.optimal-low{
+  color:#c95b5b;   /* muted red */
+}
+
+.optimal-mid{
+  color:#c97a2b;   /* dark burnt orange */
+}
+
+.optimal-full{
+  color:#4fd18b;   /* green, different from set items */
+}
 
 /* "Incomplete" label: different red, not bold */
 .incomplete{
@@ -102,7 +115,7 @@ li{margin:4px 0;}
   <div class="container">
     <div class="topbar">
       <div>
-        <h1>Lootfiend Build Tracker v3.19</h1>
+        <h1>Lootfiend Build Tracker v3.20</h1>
         <div class="small">Saves in your browser (no login). Arcanist and Savage are stored separately because their stash items are different.</div>
       </div>
       <div class="class-switch" role="group" aria-label="Class switch">
@@ -155,7 +168,7 @@ li{margin:4px 0;}
 
   <script>
     // Version marker: bump each revision so you can confirm the live site updated.
-    const VERSION = "3.19";
+    const VERSION = "3.20";
 
     document.addEventListener("DOMContentLoaded", () => {
       // Keeps build detail panels open across re-renders
@@ -1259,7 +1272,14 @@ div.innerHTML =
   ) +
   '<div class="meta">' + escapeHtml(b.class) + ' • ' + escapeHtml(b.coreSkill) + ' • ' +
     s.optimalOwned + '/' + s.requiredCount + ' optimal</div>' +
-  '<div class="progress">Optimal: ' + s.optimalPct + '%</div>' +
+  (() => {
+  let cls = "optimal-low";
+  if (s.optimalPct >= 100) cls = "optimal-full";
+  else if (s.optimalPct >= 50) cls = "optimal-mid";
+
+  return '<div class="progress ' + cls + '">Optimal: ' + s.optimalPct + '%</div>';
+})() +
+
   '<div style="margin-top:6px;">' + playableLabel + '</div>' +
   gearDetailsHtml(b);
 
