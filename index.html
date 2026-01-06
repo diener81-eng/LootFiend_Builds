@@ -87,7 +87,7 @@
   <div class="container">
     <div class="topbar">
       <div>
-        <h1>Lootborn Build Tracker v3.17</h1>
+        <h1>Lootborn Build Tracker v3.18</h1>
         <div class="small">Saves in your browser (no login). Arcanist and Savage are stored separately because their stash items are different.</div>
       </div>
       <div class="class-switch" role="group" aria-label="Class switch">
@@ -97,10 +97,23 @@
     </div>
 
 <div class="row">
+  <!-- LEFT COLUMN: INVENTORY -->
   <div class="card">
-    <!-- Inventory -->
+    <h2>Your Inventory</h2>
+    <div class="hint">
+      Check the items you own. This list is auto-generated from all items used in the builds (including substitutes).
+      Your selections save automatically in your browser.
+    </div>
+
+    <div class="btn-row">
+      <button id="saveBtn" type="button">Save now</button>
+      <button id="clearBtn" type="button" title="Clears all saved inventory for the selected class">Clear inventory</button>
+    </div>
+
+    <div class="inv-grid" id="invGrid"></div>
   </div>
 
+  <!-- RIGHT COLUMN: BUILDS -->
   <div class="card">
     <h2>Builds you are closest to</h2>
 
@@ -117,13 +130,12 @@
     <div id="buildResults" style="margin-top:12px;"></div>
   </div>
 </div>
+</div>
 
-    </div>
-  </div>
 
   <script>
     // Version marker: bump each revision so you can confirm the live site updated.
-    const VERSION = "3.7";
+    const VERSION = "3.18";
 
     document.addEventListener("DOMContentLoaded", () => {
       // Keeps build detail panels open across re-renders
