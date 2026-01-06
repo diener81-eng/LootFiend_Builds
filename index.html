@@ -209,6 +209,69 @@ h1{
   text-align:center;
   gap:8px;
 }
+/* --- Filter chips (checkboxes styled as pills) --- */
+.filter-chips{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  align-items:center;
+}
+
+.chip{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:8px 12px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,0.12);
+  background: rgba(0,0,0,0.18);
+  color: rgba(230,230,230,0.75);
+  cursor:pointer;
+  user-select:none;
+  transition: transform 120ms ease, filter 120ms ease, background 120ms ease, border-color 120ms ease;
+}
+
+.chip:hover{ filter:brightness(1.08); }
+.chip:active{ transform: translateY(1px); }
+
+.chip input{
+  position:absolute;
+  opacity:0;
+  pointer-events:none;
+}
+
+.chip span{
+  font-weight:700;
+  letter-spacing:0.2px;
+}
+
+/* checked state */
+.chip:has(input:checked){
+  color:#fff;
+  border-color: rgba(255,255,255,0.22);
+  background: rgba(255,255,255,0.10);
+}
+
+/* color accents (only when checked) */
+.chip-purple:has(input:checked){
+  background: rgba(122,77,255,0.22);
+  border-color: rgba(122,77,255,0.45);
+}
+
+.chip-orange:has(input:checked){
+  background: rgba(255,138,43,0.20);
+  border-color: rgba(255,138,43,0.45);
+}
+
+.chip-gold:has(input:checked){
+  background: rgba(255,205,90,0.18);
+  border-color: rgba(255,205,90,0.45);
+}
+
+.chip-muted:has(input:checked){
+  background: rgba(255,255,255,0.12);
+  border-color: rgba(255,255,255,0.28);
+}
 
 
   </style>
@@ -217,7 +280,7 @@ h1{
   <div class="container">
     <div class="topbar">
   <div style="text-align:center; width:100%;">
-    <h1>Lootfiend Build Tracker v3.26</h1>
+    <h1>Lootfiend Build Tracker v3.27</h1>
     <div class="small">
       Saves in your browser (no login). Arcanist and Savage are stored separately because their stash items are different.
     </div>
@@ -264,15 +327,33 @@ h1{
 <details class="filter-panel">
   <summary>Filters</summary>
 
-  <div class="toggle-row" style="margin-top:8px;">
-    <label><input type="checkbox" id="showPlayableOnly" /> Show playable only</label>
+<div class="filter-chips" style="margin-top:10px;">
+  <label class="chip">
+    <input type="checkbox" id="showPlayableOnly" />
+    <span>Playable only</span>
+  </label>
 
-    <label><input type="checkbox" id="filterPVE" checked /> PvE</label>
-    <label><input type="checkbox" id="filterPVP" checked /> PvP</label>
-    <label><input type="checkbox" id="filterAncientGod" checked /> Ancient God</label>
+  <label class="chip chip-purple">
+    <input type="checkbox" id="filterPVE" checked />
+    <span>PvE</span>
+  </label>
 
-    <label><input type="checkbox" id="sortByOptimal" checked /> Sort by optimal percent</label>
-  </div>
+  <label class="chip chip-orange">
+    <input type="checkbox" id="filterPVP" checked />
+    <span>PvP</span>
+  </label>
+
+  <label class="chip chip-gold">
+    <input type="checkbox" id="filterAncientGod" checked />
+    <span>Ancient God</span>
+  </label>
+
+  <label class="chip chip-muted">
+    <input type="checkbox" id="sortByOptimal" checked />
+    <span>Sort by optimal</span>
+  </label>
+</div>
+
 </details>
 
 
@@ -286,7 +367,7 @@ h1{
 
   <script>
     // Version marker: bump each revision so you can confirm the live site updated.
-    const VERSION = "3.26";
+    const VERSION = "3.27";
 
     document.addEventListener("DOMContentLoaded", () => {
 
