@@ -115,8 +115,8 @@ li{margin:4px 0;}
   <div class="container">
     <div class="topbar">
       <div>
-        <h1>Lootfiend Build Tracker v3.22</h1>
-        <div class="small">Saves in your browser (no login). Arcanist and Savage are stored separately because their stash items are different.</div>
+        <h1>Lootfiend Build Tracker v3.23</h1>
+        <div class="small">Saves in your browser, to export a backup click export json. Click Savage for Savage inventory.</div>
       </div>
       <div class="class-switch" role="group" aria-label="Class switch">
         <button id="btnArcanist" type="button" class="pill active">Arcanist Builds</button>
@@ -129,8 +129,7 @@ li{margin:4px 0;}
   <div class="card">
     <h2>Your Inventory</h2>
     <div class="hint">
-      Check the items you own. This list is auto-generated from all items used in the builds (including substitutes).
-      Your selections save automatically in your browser.
+      Check the items you own. This list is from all items used in the wiki builds (including substitutes).
     </div>
 
     <div class="btn-row">
@@ -162,9 +161,6 @@ li{margin:4px 0;}
   </div>
 </details>
 
-<div class="btn-row" style="margin-top:10px;">
-  <button id="importBuildBtn" type="button">Import build JSON</button>
-</div>
 
     <div id="buildResults" style="margin-top:12px;"></div>
   </div>
@@ -176,7 +172,7 @@ li{margin:4px 0;}
 
   <script>
     // Version marker: bump each revision so you can confirm the live site updated.
-    const VERSION = "3.22";
+    const VERSION = "3.23";
 
     document.addEventListener("DOMContentLoaded", () => {
       function inventoryToExportObject(cls, inv){
