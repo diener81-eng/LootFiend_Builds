@@ -94,17 +94,7 @@
     details{margin-top:10px;}
 summary{cursor:pointer;color:var(--muted);}
 
-/* Collapsible filter panel */
-/* Collapsible filter panel */
-.filter-panel summary{
-  cursor:pointer;
-  color:#4da3ff;      /* blue */
-  font-weight:600;
-}
 
-.filter-panel[open] summary{
-  margin-bottom:4px;
-}
 
 
 ul{margin:8px 0 0 18px;padding:0;}
@@ -248,30 +238,33 @@ h1{
 /* checked state */
 .chip:has(input:checked){
   color:#fff;
-  border-color: rgba(255,255,255,0.22);
-  background: rgba(255,255,255,0.10);
+  background: #2a2f44;
+  border-color: transparent;
 }
+
 
 /* color accents (only when checked) */
 .chip-purple:has(input:checked){
-  background: rgba(122,77,255,0.22);
-  border-color: rgba(122,77,255,0.45);
+  background: linear-gradient(135deg, #6f4dff, #8b6bff);
+  border-color: transparent;
 }
 
 .chip-orange:has(input:checked){
-  background: rgba(255,138,43,0.20);
-  border-color: rgba(255,138,43,0.45);
+  background: linear-gradient(135deg, #ff8a2b, #ffad5a);
+  border-color: transparent;
 }
 
 .chip-gold:has(input:checked){
-  background: rgba(255,205,90,0.18);
-  border-color: rgba(255,205,90,0.45);
+  background: linear-gradient(135deg, #ffcc55, #ffd97d);
+  color:#2a1a00;
+  border-color: transparent;
 }
 
 .chip-muted:has(input:checked){
-  background: rgba(255,255,255,0.12);
-  border-color: rgba(255,255,255,0.28);
+  background: #3a3f58;
+  border-color: transparent;
 }
+
 
 
   </style>
@@ -280,7 +273,7 @@ h1{
   <div class="container">
     <div class="topbar">
   <div style="text-align:center; width:100%;">
-    <h1>Lootfiend Build Tracker v3.27</h1>
+    <h1>Lootfiend Build Tracker v3.28</h1>
     <div class="small">
       Saves in your browser (no login). Arcanist and Savage are stored separately because their stash items are different.
     </div>
@@ -324,10 +317,7 @@ h1{
   <div class="card">
     <h2>Popular Compatible Builds</h2>
 
-<details class="filter-panel">
-  <summary>Filters</summary>
-
-<div class="filter-chips" style="margin-top:10px;">
+<div class="filter-chips" style="margin-top:12px;">
   <label class="chip">
     <input type="checkbox" id="showPlayableOnly" />
     <span>Playable only</span>
@@ -354,7 +344,6 @@ h1{
   </label>
 </div>
 
-</details>
 
 
     <div id="buildResults" style="margin-top:12px;"></div>
@@ -367,7 +356,7 @@ h1{
 
   <script>
     // Version marker: bump each revision so you can confirm the live site updated.
-    const VERSION = "3.27";
+    const VERSION = "3.28";
 
     document.addEventListener("DOMContentLoaded", () => {
 
