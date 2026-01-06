@@ -50,22 +50,23 @@
 }
 
 .action-btn{
-  min-width:132px;
-  height:88px;
+  min-width:104px;
+  height:68px;
   display:flex;
   flex-direction:column;
   justify-content:center;
   align-items:center;
-  gap:10px;
+  gap:6px;
 
-  border-radius:18px;
+  border-radius:14px;
   background: rgba(255,255,255,0.04);
   border: 1px solid rgba(255,255,255,0.06);
-  box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+  box-shadow: 0 8px 22px rgba(0,0,0,0.22);
 
-  padding: 12px 16px;
+  padding: 10px 12px;
   font-weight:600;
 }
+
 
 .action-btn:hover{ filter:brightness(1.10); }
 .action-btn:active{ transform:translateY(1px); }
@@ -84,16 +85,18 @@
 }
 
 .action-ico svg{
-  width:24px;
-  height:24px;
+  width:20px;
+  height:20px;
   color: currentColor;
 }
 
+
 .action-text{
-  font-size:22px;
+  font-size:16px;
   line-height:1;
   letter-spacing:0.2px;
 }
+
 
     .class-switch{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
     .class-btn{background:var(--btn);}
@@ -326,7 +329,7 @@ h1{
   <div class="container">
     <div class="topbar">
   <div style="text-align:center; width:100%;">
-    <h1>Lootfiend Build Tracker v3.29</h1>
+    <h1>Lootfiend Build Tracker v3.30</h1>
     <div class="small">
       Saves in your browser (no login). Arcanist and Savage are stored separately because their stash items are different.
     </div>
@@ -451,7 +454,7 @@ h1{
 
   <script>
     // Version marker: bump each revision so you can confirm the live site updated.
-    const VERSION = "3.29";
+    const VERSION = "3.30";
 
     document.addEventListener("DOMContentLoaded", () => {
 
