@@ -73,9 +73,22 @@
   margin-top:4px;
 }
     details{margin-top:10px;}
-    summary{cursor:pointer;color:var(--muted);}
-    ul{margin:8px 0 0 18px;padding:0;}
-    li{margin:4px 0;}
+summary{cursor:pointer;color:var(--muted);}
+
+/* Collapsible filter panel */
+.filter-panel summary{
+  cursor:pointer;
+  color:var(--muted);
+  font-weight:600;
+}
+
+.filter-panel[open] summary{
+  margin-bottom:4px;
+}
+
+ul{margin:8px 0 0 18px;padding:0;}
+li{margin:4px 0;}
+
 
     /* Item name coloring (default red, some green set pieces) */
     .item-red{color:var(--red);font-weight:500;}
@@ -87,7 +100,7 @@
   <div class="container">
     <div class="topbar">
       <div>
-        <h1>Lootborn Build Tracker v3.18</h1>
+        <h1>Lootborn Build Tracker v3.19</h1>
         <div class="small">Saves in your browser (no login). Arcanist and Savage are stored separately because their stash items are different.</div>
       </div>
       <div class="class-switch" role="group" aria-label="Class switch">
@@ -117,15 +130,20 @@
   <div class="card">
     <h2>Builds you are closest to</h2>
 
-    <div class="toggle-row">
-      <label><input type="checkbox" id="showPlayableOnly" /> Show playable only</label>
+<details class="filter-panel">
+  <summary>Filters</summary>
 
-      <label><input type="checkbox" id="filterPVE" checked /> PvE</label>
-      <label><input type="checkbox" id="filterPVP" checked /> PvP</label>
-      <label><input type="checkbox" id="filterAncientGod" checked /> Ancient God</label>
+  <div class="toggle-row" style="margin-top:8px;">
+    <label><input type="checkbox" id="showPlayableOnly" /> Show playable only</label>
 
-      <label><input type="checkbox" id="sortByOptimal" checked /> Sort by optimal percent</label>
-    </div>
+    <label><input type="checkbox" id="filterPVE" checked /> PvE</label>
+    <label><input type="checkbox" id="filterPVP" checked /> PvP</label>
+    <label><input type="checkbox" id="filterAncientGod" checked /> Ancient God</label>
+
+    <label><input type="checkbox" id="sortByOptimal" checked /> Sort by optimal percent</label>
+  </div>
+</details>
+
 
     <div id="buildResults" style="margin-top:12px;"></div>
   </div>
@@ -135,7 +153,7 @@
 
   <script>
     // Version marker: bump each revision so you can confirm the live site updated.
-    const VERSION = "3.18";
+    const VERSION = "3.19";
 
     document.addEventListener("DOMContentLoaded", () => {
       // Keeps build detail panels open across re-renders
