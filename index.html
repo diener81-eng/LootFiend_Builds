@@ -33,7 +33,7 @@
 
     .inv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-top:10px;}
     .slot{background:rgba(0,0,0,0.20);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:10px;}
-    .slot label{display:block;font-weight:600;margin-bottom:6px;}
+  
 
 
     button{cursor:pointer;background:var(--btn);color:var(--text);border:1px solid rgba(255,255,255,0.10);border-radius:10px;padding:10px 12px;font-weight:600;}
@@ -49,7 +49,7 @@
     .toggle-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:10px;}
     .topbar{flex-direction:column;}
 
-    .class-switch{display:flex;gap:10px;align-items:center;justify-content:flex-end;flex-wrap:wrap;}
+  
     .pill{cursor:pointer;background:#222738;color:var(--text);border:1px solid rgba(255,255,255,0.10);border-radius:999px;padding:10px 14px;font-weight:600;}
     .pill:hover{filter:brightness(1.08);} 
     .pill:active{transform:translateY(1px);} 
@@ -63,6 +63,11 @@
     .ok{color:var(--ok);font-weight:600;}
     .bad{color:var(--bad);font-weight:600;}
     .warn{color:var(--warn);font-weight:600;}
+    .ico{display:inline-block; margin-right:8px; transform:translateY(1px);}
+    .slot label{display:flex;align-items:center;gap:6px;font-weight:600;margin-bottom:6px;}
+
+    .build h3{display:flex;align-items:center;gap:8px;}
+
 /* Optimal % color states */
 .optimal-low{
   color:#c95b5b;   /* muted red */
@@ -116,14 +121,15 @@ li{margin:4px 0;}
   <div class="container">
     <div class="topbar">
   <div style="text-align:center; width:100%;">
-    <h1>Lootfiend Build Tracker v3.25</h1>
+    <h1>Lootfiend Build Tracker v3.26</h1>
     <div class="small">
       Saves in your browser (no login). Arcanist and Savage are stored separately because their stash items are different.
     </div>
 
     <div class="class-switch" role="group" aria-label="Class switch" style="justify-content:center; margin-top:10px;">
-      <button id="btnArcanist" type="button" class="pill active">Arcanist Builds</button>
-      <button id="btnSavage" type="button" class="pill">Savage Builds</button>
+      <button id="btnArcanist" type="button" class="pill active"><span class="ico">🧙‍♂️</span> Arcanist Builds</button>
+      <button id="btnSavage" type="button" class="pill"><span class="ico">🪓</span> Savage Builds</button>
+
     </div>
   </div>
 </div>
@@ -177,19 +183,10 @@ li{margin:4px 0;}
 
   <script>
     // Version marker: bump each revision so you can confirm the live site updated.
-    const VERSION = "3.25";
+    const VERSION = "3.26";
 
     document.addEventListener("DOMContentLoaded", () => {
-      function inventoryToExportObject(cls, inv){
-  const obj = {};
-  for (const slot of slots) obj[slot] = Array.from(inv[slot]);
-  return {
-    version: 1,
-    exportedAt: new Date().toISOString(),
-    class: cls,
-    inventory: obj
-  };
-}
+
 
 function downloadJson(filename, obj){
   const blob = new Blob([JSON.stringify(obj, null, 2)], { type: "application/json" });
@@ -222,7 +219,16 @@ function downloadJson(filename, obj){
         "amulet",
         "ring"
       ];
-
+      function inventoryToExportObject(cls, inv){
+  const obj = {};
+  for (const slot of slots) obj[slot] = Array.from(inv[slot]);
+  return {
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    class: cls,
+    inventory: obj
+  };
+}
       const WIKI_BASE = "https://lootbornwarriors.miraheze.org/wiki/";
 
       // --- Name normalization (aliases) ---
@@ -294,23 +300,24 @@ function sanitizeImportedBuild(obj){
       }
 
       // --- Slot labels & item color rules ---
-      function slotLabel(slot){
-        const map = {
-          weapon: "Weapon",
-          helmet: "Helmet",
-          pauldron: "Pauldrons",
-          cuirass: "Cuirass",
-          gauntlet: "Gauntlets",
-          greaves: "Greaves",
-          boots: "Boots",
-          bracers: "Bracers",
-          belt: "Belt",
-          necklace: "Necklace",
-          amulet: "Amulet",
-          ring: "Ring"
-        };
-        return map[slot] || titleCase(slot);
-      }
+function slotLabel(slot){
+  const map = {
+    weapon: "⚔️ Weapon",
+    helmet: "🪖 Helmet",
+    pauldron: "🛡️ Pauldrons",
+    cuirass: "🥋 Cuirass",
+    gauntlet: "🧤 Gauntlets",
+    greaves: "🦵 Greaves",
+    boots: "👢 Boots",
+    bracers: "🧤 Bracers",
+    belt: "🪢 Belt",
+    necklace: "📿 Necklace",
+    amulet: "🧿 Amulet",
+    ring: "💍 Ring"
+  };
+  return map[slot] || titleCase(slot);
+}
+
 
       // Default gear names are red; these specific names are green.
       const GREEN_ITEMS = new Set([
@@ -1350,8 +1357,7 @@ html += '<li><span class="bad">✗</span> ' +
           const div = document.createElement("div");
           div.className = "build";
 div.innerHTML =
-  div.innerHTML =
-  '<h3>' + escapeHtml(b.build) + ' – ' + escapeHtml(b.variant) + '</h3>' +
+    '<h3>' + escapeHtml(b.build) + ' – ' + escapeHtml(b.variant) + '</h3>' +
   
 
   (isAncientGod
