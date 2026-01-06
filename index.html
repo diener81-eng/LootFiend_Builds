@@ -115,6 +115,102 @@ li{margin:4px 0;}
     .item-red{color:var(--red);font-weight:500;}
     .item-green{color:var(--green);font-weight:500;}
     .item{color:var(--text);font-weight:500;}
+
+/* --- App background + typography --- */
+:root{
+  --purple:#7a4dff;
+  --orange:#ff8a2b;
+  --card: rgba(18, 22, 34, 0.62);
+  --cardBorder: rgba(255,255,255,0.10);
+}
+
+body{
+  background:
+    radial-gradient(900px 520px at 30% 18%, rgba(122,77,255,0.22), transparent 60%),
+    radial-gradient(800px 480px at 70% 20%, rgba(255,138,43,0.12), transparent 62%),
+    radial-gradient(900px 520px at 50% 80%, rgba(90,110,255,0.10), transparent 60%),
+    var(--bg);
+}
+
+h1{
+  letter-spacing:0.3px;
+  font-weight:800;
+  background: linear-gradient(90deg, #ffcf5a, #ff7a2f, #b66dff);
+  -webkit-background-clip:text;
+  background-clip:text;
+  color:transparent;
+}
+
+.small{
+  opacity:0.9;
+}
+
+/* --- Softer cards --- */
+.card{
+  background: var(--card);
+  border: 1px solid var(--cardBorder);
+  box-shadow: 0 16px 40px rgba(0,0,0,0.35);
+  backdrop-filter: blur(10px);
+}
+
+/* --- Sliding class toggle --- */
+.class-toggle{
+  position:relative;
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  width:min(360px, 92vw);
+  margin:14px auto 0;
+  padding:6px;
+  border-radius:999px;
+  background: rgba(0,0,0,0.25);
+  border:1px solid rgba(255,255,255,0.10);
+}
+
+.toggle-indicator{
+  position:absolute;
+  inset:6px;
+  width:calc(50% - 0px);
+  border-radius:999px;
+  background: rgba(122,77,255,0.85);
+  box-shadow: 0 10px 26px rgba(122,77,255,0.25);
+  transform: translateX(0%);
+  transition: transform 180ms ease, background 180ms ease, box-shadow 180ms ease;
+  z-index:0;
+}
+
+.class-toggle.is-savage .toggle-indicator{
+  transform: translateX(100%);
+  background: rgba(255,138,43,0.85);
+  box-shadow: 0 10px 26px rgba(255,138,43,0.20);
+}
+
+.toggle-btn{
+  position:relative;
+  z-index:1;
+  border:0;
+  background: transparent;
+  color: rgba(230,230,230,0.80);
+  padding:10px 14px;
+  border-radius:999px;
+  font-weight:700;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+}
+
+.toggle-btn.active{
+  color: #fff;
+}
+
+/* --- Make your topbar truly centered like the mock --- */
+.topbar{
+  flex-direction:column;
+  text-align:center;
+  gap:8px;
+}
+
+
   </style>
 </head>
 <body>
@@ -126,11 +222,18 @@ li{margin:4px 0;}
       Saves in your browser (no login). Arcanist and Savage are stored separately because their stash items are different.
     </div>
 
-    <div class="class-switch" role="group" aria-label="Class switch" style="justify-content:center; margin-top:10px;">
-      <button id="btnArcanist" type="button" class="pill active"><span class="ico">🧙‍♂️</span> Arcanist Builds</button>
-      <button id="btnSavage" type="button" class="pill"><span class="ico">🪓</span> Savage Builds</button>
+<div class="class-toggle" id="classToggle" role="group" aria-label="Class switch">
+  <span class="toggle-indicator" aria-hidden="true"></span>
 
-    </div>
+  <button id="btnArcanist" type="button" class="toggle-btn active">
+    <span class="ico">🧙‍♂️</span> Arcanist
+  </button>
+
+  <button id="btnSavage" type="button" class="toggle-btn">
+    <span class="ico">🪓</span> Savage
+  </button>
+</div>
+
   </div>
 </div>
 
@@ -1490,6 +1593,7 @@ div.innerHTML =
         const sBtn = document.getElementById("btnSavage");
         aBtn.classList.toggle("active", activeClass === "Arcanist");
         sBtn.classList.toggle("active", activeClass === "Savage");
+        document.getElementById("classToggle")?.classList.toggle("is-savage", activeClass === "Savage");
 
         renderInventory();
         renderBuilds();
