@@ -41,6 +41,59 @@
     button:active{transform:translateY(1px);} 
 
     .btn-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;}
+/* Inventory action tiles (Save / Clear / Export / Import) */
+.inv-actions{
+  display:flex;
+  gap:14px;
+  flex-wrap:wrap;
+  margin-top:14px;
+}
+
+.action-btn{
+  min-width:132px;
+  height:88px;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  gap:10px;
+
+  border-radius:18px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.06);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+
+  padding: 12px 16px;
+  font-weight:600;
+}
+
+.action-btn:hover{ filter:brightness(1.10); }
+.action-btn:active{ transform:translateY(1px); }
+
+.action-btn.primary{
+  background: #7b3ff2;
+  border-color: rgba(255,255,255,0.10);
+}
+
+.action-ico{
+  width:24px;
+  height:24px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.action-ico svg{
+  width:24px;
+  height:24px;
+  color: currentColor;
+}
+
+.action-text{
+  font-size:22px;
+  line-height:1;
+  letter-spacing:0.2px;
+}
 
     .class-switch{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
     .class-btn{background:var(--btn);}
@@ -273,7 +326,7 @@ h1{
   <div class="container">
     <div class="topbar">
   <div style="text-align:center; width:100%;">
-    <h1>Lootfiend Build Tracker v3.28</h1>
+    <h1>Lootfiend Build Tracker v3.29</h1>
     <div class="small">
       Saves in your browser (no login). Arcanist and Savage are stored separately because their stash items are different.
     </div>
@@ -302,13 +355,55 @@ h1{
       Check the items you own. This list is from all items used in the wiki builds (including substitutes).
     </div>
 
-    <div class="btn-row">
-      <button id="saveBtn" type="button">Save now</button>
-      <button id="clearBtn" type="button" title="Clears all saved inventory for the selected class">Clear inventory</button>
-    <button id="exportInvBtn" type="button">Export inventory</button>
-    <button id="importInvBtn" type="button">Import inventory</button>
+<div class="btn-row inv-actions">
+  <button id="saveBtn" type="button" class="action-btn primary">
+    <span class="action-ico" aria-hidden="true">
+      <!-- save -->
+      <svg viewBox="0 0 24 24" fill="none">
+        <path d="M4 7.5V20a1.5 1.5 0 0 0 1.5 1.5h13A1.5 1.5 0 0 0 20 20V9l-3-3H5.5A1.5 1.5 0 0 0 4 7.5Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+        <path d="M8 6v6h8V6" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+      </svg>
+    </span>
+    <span class="action-text">Save</span>
+  </button>
 
-    </div>
+  <button id="clearBtn" type="button" class="action-btn" title="Clears all saved inventory for the selected class">
+    <span class="action-ico" aria-hidden="true">
+      <!-- trash -->
+      <svg viewBox="0 0 24 24" fill="none">
+        <path d="M4 7h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        <path d="M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+        <path d="M7 7l1 14h8l1-14" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+      </svg>
+    </span>
+    <span class="action-text">Clear</span>
+  </button>
+
+  <button id="exportInvBtn" type="button" class="action-btn">
+    <span class="action-ico" aria-hidden="true">
+      <!-- download -->
+      <svg viewBox="0 0 24 24" fill="none">
+        <path d="M12 3v11" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        <path d="M8 11l4 4 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M5 20h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+    </span>
+    <span class="action-text">Export</span>
+  </button>
+
+  <button id="importInvBtn" type="button" class="action-btn">
+    <span class="action-ico" aria-hidden="true">
+      <!-- upload -->
+      <svg viewBox="0 0 24 24" fill="none">
+        <path d="M12 21V10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        <path d="M8 13l4-4 4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M5 4h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+    </span>
+    <span class="action-text">Import</span>
+  </button>
+</div>
+
 
     <div class="inv-grid" id="invGrid"></div>
   </div>
@@ -356,7 +451,7 @@ h1{
 
   <script>
     // Version marker: bump each revision so you can confirm the live site updated.
-    const VERSION = "3.28";
+    const VERSION = "3.29";
 
     document.addEventListener("DOMContentLoaded", () => {
 
