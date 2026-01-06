@@ -136,6 +136,9 @@ li{margin:4px 0;}
     <div class="btn-row">
       <button id="saveBtn" type="button">Save now</button>
       <button id="clearBtn" type="button" title="Clears all saved inventory for the selected class">Clear inventory</button>
+    <button id="exportInvBtn" type="button">Export inventory</button>
+    <button id="importInvBtn" type="button">Import inventory</button>
+
     </div>
 
     <div class="inv-grid" id="invGrid"></div>
@@ -168,14 +171,37 @@ li{margin:4px 0;}
 </div>
 </div>
 
-<input id="importBuildFile" type="file" accept="application/json" style="display:none;" />
+<input id="importInvFile" type="file" accept="application/json" style="display:none;" />
+
 
   <script>
     // Version marker: bump each revision so you can confirm the live site updated.
     const VERSION = "3.21";
 
     document.addEventListener("DOMContentLoaded", () => {
-      
+      function inventoryToExportObject(cls, inv){
+  const obj = {};
+  for (const slot of slots) obj[slot] = Array.from(inv[slot]);
+  return {
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    class: cls,
+    inventory: obj
+  };
+}
+
+function downloadJson(filename, obj){
+  const blob = new Blob([JSON.stringify(obj, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
       // Keeps build detail panels open across re-renders
       const openDetails = new Set();
       function buildKey(b){
@@ -1313,9 +1339,7 @@ html += '<li><span class="bad">✗</span> ' +
 div.innerHTML =
   div.innerHTML =
   '<h3>' + escapeHtml(b.build) + ' – ' + escapeHtml(b.variant) + '</h3>' +
-  '<div class="btn-row" style="margin-top:6px;">' +
-    '<button type="button" class="exportBuildBtn" data-buildkey="' + escapeHtml(buildKey(b)) + '">Export JSON</button>' +
-  '</div>' +
+  
 
   (isAncientGod
     ? '<div class="ag-warning">Warning: This build requires 15% or more Hail CD</div>'
@@ -1337,17 +1361,7 @@ div.innerHTML =
 
           out.appendChild(div);
         }
-out.querySelectorAll(".exportBuildBtn").forEach(btn => {
-  btn.addEventListener("click", () => {
-    const key = btn.getAttribute("data-buildkey");
-    const b = builds.find(x => buildKey(x) === key);
-    if (!b) return;
 
-    const payload = buildToExportObject(b);
-    const safeName = (b.build + "_" + b.variant).replaceAll(" ", "_");
-    downloadJson("lootfiend_build_" + safeName + ".json", payload);
-  });
-});
 
         // Restore and persist open/closed state for detail panels
         out.querySelectorAll('details[data-buildkey]').forEach(d => {
@@ -1478,37 +1492,54 @@ out.querySelectorAll(".exportBuildBtn").forEach(btn => {
         saveInventory(inventory, activeClass);
         renderBuilds();
       });
-
-      document.getElementById('showPlayableOnly').addEventListener('change', renderBuilds);
-      document.getElementById('sortByOptimal').addEventListener('change', renderBuilds);
-      document.getElementById("importBuildBtn").addEventListener("click", () => {
-  document.getElementById("importBuildFile").click();
+document.getElementById("exportInvBtn").addEventListener("click", () => {
+  const payload = inventoryToExportObject(activeClass, inventory);
+  downloadJson(
+    "lootfiend_inventory_" + activeClass.toLowerCase() + ".json",
+    payload
+  );
 });
 
-document.getElementById("importBuildFile").addEventListener("change", async (e) => {
+document.getElementById("importInvBtn").addEventListener("click", () => {
+  document.getElementById("importInvFile").click();
+});
+
+document.getElementById("importInvFile").addEventListener("change", async (e) => {
   const file = e.target.files && e.target.files[0];
   if (!file) return;
 
   try {
     const text = await file.text();
     const obj = JSON.parse(text);
-    const imported = sanitizeImportedBuild(obj);
-    if (!imported) {
-      alert("Invalid build JSON file.");
+
+    if (!obj || !obj.inventory) {
+      alert("Invalid inventory file.");
       return;
     }
 
-    imported.variant += " (Imported)";
-    builds.push(imported);
+    inventory = emptyInventory();
+    for (const slot of slots) {
+      const arr = obj.inventory[slot];
+      if (Array.isArray(arr)) {
+        for (const it of arr) {
+          inventory[slot].add(normalizeItemName(it));
+        }
+      }
+    }
 
+    saveInventory(inventory, activeClass);
     renderInventory();
     renderBuilds();
   } catch {
-    alert("Could not import that file.");
+    alert("Could not import that inventory file.");
   } finally {
     e.target.value = "";
   }
 });
+
+      document.getElementById('showPlayableOnly').addEventListener('change', renderBuilds);
+      document.getElementById('sortByOptimal').addEventListener('change', renderBuilds);
+
 
       document.getElementById('filterPVE').addEventListener('change', renderBuilds);
       document.getElementById('filterPVP').addEventListener('change', renderBuilds);
