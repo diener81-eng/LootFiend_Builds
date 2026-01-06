@@ -159,18 +159,23 @@ li{margin:4px 0;}
   </div>
 </details>
 
+<div class="btn-row" style="margin-top:10px;">
+  <button id="importBuildBtn" type="button">Import build JSON</button>
+</div>
 
     <div id="buildResults" style="margin-top:12px;"></div>
   </div>
 </div>
 </div>
 
+<input id="importBuildFile" type="file" accept="application/json" style="display:none;" />
 
   <script>
     // Version marker: bump each revision so you can confirm the live site updated.
     const VERSION = "3.20";
 
     document.addEventListener("DOMContentLoaded", () => {
+      
       // Keeps build detail panels open across re-renders
       const openDetails = new Set();
       function buildKey(b){
@@ -202,6 +207,47 @@ li{margin:4px 0;}
         "pack binding": "Pact Binding",
         "dragon hyun walker": "Dragon Hymn Walker"
       };
+function buildToExportObject(b){
+  return {
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    build: {
+      class: b.class,
+      coreSkill: b.coreSkill,
+      build: b.build,
+      variant: b.variant,
+      gear: b.gear,
+      alternatives: b.alternatives || {}
+    }
+  };
+}
+
+function downloadJson(filename, obj){
+  const blob = new Blob([JSON.stringify(obj, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+function sanitizeImportedBuild(obj){
+  const b = obj && obj.build;
+  if (!b || !b.class || !b.build || !b.variant || !b.gear) return null;
+
+  // minimal cleanup / defaults
+  return {
+    class: String(b.class),
+    coreSkill: String(b.coreSkill || ""),
+    build: String(b.build),
+    variant: String(b.variant),
+    gear: b.gear,
+    alternatives: b.alternatives || {}
+  };
+}
 
       function collapseSpaces(s) {
         let out = String(s || "");
@@ -1265,7 +1311,12 @@ html += '<li><span class="bad">✗</span> ' +
           const div = document.createElement("div");
           div.className = "build";
 div.innerHTML =
+  div.innerHTML =
   '<h3>' + escapeHtml(b.build) + ' – ' + escapeHtml(b.variant) + '</h3>' +
+  '<div class="btn-row" style="margin-top:6px;">' +
+    '<button type="button" class="exportBuildBtn" data-buildkey="' + escapeHtml(buildKey(b)) + '">Export JSON</button>' +
+  '</div>' +
+
   (isAncientGod
     ? '<div class="ag-warning">Warning: This build requires 15% or more Hail CD</div>'
     : ''
@@ -1286,6 +1337,17 @@ div.innerHTML =
 
           out.appendChild(div);
         }
+out.querySelectorAll(".exportBuildBtn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const key = btn.getAttribute("data-buildkey");
+    const b = builds.find(x => buildKey(x) === key);
+    if (!b) return;
+
+    const payload = buildToExportObject(b);
+    const safeName = (b.build + "_" + b.variant).replaceAll(" ", "_");
+    downloadJson("lootfiend_build_" + safeName + ".json", payload);
+  });
+});
 
         // Restore and persist open/closed state for detail panels
         out.querySelectorAll('details[data-buildkey]').forEach(d => {
@@ -1419,6 +1481,35 @@ div.innerHTML =
 
       document.getElementById('showPlayableOnly').addEventListener('change', renderBuilds);
       document.getElementById('sortByOptimal').addEventListener('change', renderBuilds);
+      document.getElementById("importBuildBtn").addEventListener("click", () => {
+  document.getElementById("importBuildFile").click();
+});
+
+document.getElementById("importBuildFile").addEventListener("change", async (e) => {
+  const file = e.target.files && e.target.files[0];
+  if (!file) return;
+
+  try {
+    const text = await file.text();
+    const obj = JSON.parse(text);
+    const imported = sanitizeImportedBuild(obj);
+    if (!imported) {
+      alert("Invalid build JSON file.");
+      return;
+    }
+
+    imported.variant += " (Imported)";
+    builds.push(imported);
+
+    renderInventory();
+    renderBuilds();
+  } catch {
+    alert("Could not import that file.");
+  } finally {
+    e.target.value = "";
+  }
+});
+
       document.getElementById('filterPVE').addEventListener('change', renderBuilds);
       document.getElementById('filterPVP').addEventListener('change', renderBuilds);
       document.getElementById('filterAncientGod').addEventListener('change', renderBuilds);
