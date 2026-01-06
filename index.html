@@ -76,15 +76,17 @@
 summary{cursor:pointer;color:var(--muted);}
 
 /* Collapsible filter panel */
+/* Collapsible filter panel */
 .filter-panel summary{
   cursor:pointer;
-  color:var(--muted);
+  color:#4da3ff;      /* blue */
   font-weight:600;
 }
 
 .filter-panel[open] summary{
   margin-bottom:4px;
 }
+
 
 ul{margin:8px 0 0 18px;padding:0;}
 li{margin:4px 0;}
@@ -100,7 +102,7 @@ li{margin:4px 0;}
   <div class="container">
     <div class="topbar">
       <div>
-        <h1>Lootborn Build Tracker v3.19</h1>
+        <h1>Lootfiend Build Tracker v3.19</h1>
         <div class="small">Saves in your browser (no login). Arcanist and Savage are stored separately because their stash items are different.</div>
       </div>
       <div class="class-switch" role="group" aria-label="Class switch">
@@ -128,7 +130,7 @@ li{margin:4px 0;}
 
   <!-- RIGHT COLUMN: BUILDS -->
   <div class="card">
-    <h2>Builds you are closest to</h2>
+    <h2>Popular Compatible Builds</h2>
 
 <details class="filter-panel">
   <summary>Filters</summary>
