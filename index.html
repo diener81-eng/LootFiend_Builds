@@ -1193,12 +1193,15 @@ html += '<li><span class="bad">✗</span> ' +
 
         let rows = filteredBuilds.map(b => ({ b, s: buildScore(b) }));
         rows = rows.filter(r => {
-  const v = String(r.b.variant || "");
-  const isPVP = v.includes("PvP");
-  const isAncientGod = v.includes("Ancient God");
-  const isPVE = !isPVP;
+      const v = String(r.b.variant || "");
+      const isPVP = v.includes("PvP");
+      const isPVE = v.includes("PvE");
+      const isAncientGod = v.includes("Ancient God");
 
-  const modeOk = (isPVE && showPVE) || (isPVP && showPVP);
+      const modeOk =
+        (isPVE && showPVE) ||
+        (isPVP && showPVP);
+
   const agOk = showAncientGod || !isAncientGod;
 
   return modeOk && agOk;
