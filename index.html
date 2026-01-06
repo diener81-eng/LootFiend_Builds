@@ -87,7 +87,7 @@
   <div class="container">
     <div class="topbar">
       <div>
-        <h1>Lootborn Build Tracker v3.16</h1>
+        <h1>Lootborn Build Tracker v3.17</h1>
         <div class="small">Saves in your browser (no login). Arcanist and Savage are stored separately because their stash items are different.</div>
       </div>
       <div class="class-switch" role="group" aria-label="Class switch">
@@ -96,34 +96,28 @@
       </div>
     </div>
 
-    <div class="row">
-      <div class="card">
-        <h2>Your Inventory</h2>
-        <div class="hint">
-          Check the items you own. This list is auto-generated from all items used in the builds (including substitutes).
-          Your selections save automatically in your browser.
-        </div>
+<div class="row">
+  <div class="card">
+    <!-- Inventory -->
+  </div>
 
-        <div class="btn-row">
-          <button id="saveBtn" type="button">Save now</button>
-          <button id="clearBtn" type="button" title="Clears all saved inventory for the selected class">Clear inventory</button>
-        </div>
+  <div class="card">
+    <h2>Builds you are closest to</h2>
 
-        <div class="inv-grid" id="invGrid"></div>
-      </div>
+    <div class="toggle-row">
+      <label><input type="checkbox" id="showPlayableOnly" /> Show playable only</label>
 
-      <div class="toggle-row">
-        <label><input type="checkbox" id="showPlayableOnly" /> Show playable only</label>
+      <label><input type="checkbox" id="filterPVE" checked /> PvE</label>
+      <label><input type="checkbox" id="filterPVP" checked /> PvP</label>
+      <label><input type="checkbox" id="filterAncientGod" checked /> Ancient God</label>
 
-        <label><input type="checkbox" id="filterPVE" checked /> PvE</label>
-        <label><input type="checkbox" id="filterPVP" checked /> PvP</label>
-        <label><input type="checkbox" id="filterAncientGod" checked /> Ancient God</label>
+      <label><input type="checkbox" id="sortByOptimal" checked /> Sort by optimal percent</label>
+    </div>
 
-        <label><input type="checkbox" id="sortByOptimal" checked /> Sort by optimal percent</label>
-      </div>
+    <div id="buildResults" style="margin-top:12px;"></div>
+  </div>
+</div>
 
-        <div id="buildResults" style="margin-top:12px;"></div>
-      </div>
     </div>
   </div>
 
