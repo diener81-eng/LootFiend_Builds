@@ -116,7 +116,7 @@ li{margin:4px 0;}
   <div class="container">
     <div class="topbar">
   <div style="text-align:center; width:100%;">
-    <h1>Lootfiend Build Tracker v3.24</h1>
+    <h1>Lootfiend Build Tracker v3.25</h1>
     <div class="small">
       Saves in your browser (no login). Arcanist and Savage are stored separately because their stash items are different.
     </div>
@@ -177,7 +177,7 @@ li{margin:4px 0;}
 
   <script>
     // Version marker: bump each revision so you can confirm the live site updated.
-    const VERSION = "3.24";
+    const VERSION = "3.25";
 
     document.addEventListener("DOMContentLoaded", () => {
       function inventoryToExportObject(cls, inv){
@@ -1245,17 +1245,29 @@ function sanitizeImportedBuild(obj){
           const slotLbl = '<b>' + escapeHtml(slotLabel(r.slot)) + '</b>: ';
 
           // Own optimal
-          if (r.hasRequired) {
-            html += '<li><span class="ok">✓</span> ' + slotLbl + '' + itemSpan(r.required) + ' <span class="small">(optimal)</span>';
+// Own optimal
+if (r.hasRequired) {
+  html += '<li><span class="ok">✓</span> ' + slotLbl + itemSpan(r.required) + ' <span class="small">(optimal)</span>';
 
-            if (r.ownedAlts.length > 0) {
-              const ownedAltStr = r.ownedAlts.map(a => '' + itemSpan(a) + '').join(', ');
-              html += '<div class="small" style="margin-left:22px; margin-top:2px;">Also owned substitutes: ' + ownedAltStr + '</div>';
-            }
+  if (r.altList.length > 0) {
+    const owned = r.altList.filter(a => inventory[r.slot].has(a));
+    const notOwned = r.altList.filter(a => !inventory[r.slot].has(a));
 
-            html += '</li>';
-            continue;
-          }
+    if (owned.length > 0) {
+      const ownedStr = owned.map(a => itemSpan(a)).join(', ');
+      html += '<div class="small" style="margin-left:22px; margin-top:2px;">Also owned substitutes: ' + ownedStr + '</div>';
+    }
+
+    if (notOwned.length > 0) {
+      const notOwnedStr = notOwned.map(a => itemSpan(a)).join(', ');
+      html += '<div class="small" style="margin-left:22px; margin-top:2px;">Not owned substitutes: ' + notOwnedStr + '</div>';
+    }
+  }
+
+  html += '</li>';
+  continue;
+}
+
 
           // Own substitute only
           if (r.ownedAlts.length > 0) {
