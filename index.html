@@ -47,6 +47,7 @@
     .class-btn.active{background:var(--btnActive);border-color:rgba(255,255,255,0.20);}
 
     .toggle-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:10px;}
+    .topbar{flex-direction:column;}
 
     .class-switch{display:flex;gap:10px;align-items:center;justify-content:flex-end;flex-wrap:wrap;}
     .pill{cursor:pointer;background:#222738;color:var(--text);border:1px solid rgba(255,255,255,0.10);border-radius:999px;padding:10px 14px;font-weight:600;}
@@ -114,15 +115,19 @@ li{margin:4px 0;}
 <body>
   <div class="container">
     <div class="topbar">
-      <div>
-        <h1>Lootfiend Build Tracker v3.23</h1>
-        <div class="small">Saves in your browser, to export a backup click export json. Click Savage for Savage inventory.</div>
-      </div>
-      <div class="class-switch" role="group" aria-label="Class switch">
-        <button id="btnArcanist" type="button" class="pill active">Arcanist Builds</button>
-        <button id="btnSavage" type="button" class="pill">Savage Builds</button>
-      </div>
+  <div style="text-align:center; width:100%;">
+    <h1>Lootfiend Build Tracker v3.23</h1>
+    <div class="small">
+      Saves in your browser (no login). Arcanist and Savage are stored separately because their stash items are different.
     </div>
+
+    <div class="class-switch" role="group" aria-label="Class switch" style="justify-content:center; margin-top:10px;">
+      <button id="btnArcanist" type="button" class="pill active">Arcanist Builds</button>
+      <button id="btnSavage" type="button" class="pill">Savage Builds</button>
+    </div>
+  </div>
+</div>
+
 
 <div class="row">
   <!-- LEFT COLUMN: INVENTORY -->
